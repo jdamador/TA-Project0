@@ -11,7 +11,7 @@ struct dfa_transition {
     struct dfa_transition *next;
 };
 
-typedef struct dfa_transition dfa_t_manager;
+//typedef struct dfa_transition dfa_t_manager;
 
 // This element is used to manage the final result after execute a DFA.
 typedef struct{
@@ -20,6 +20,6 @@ typedef struct{
 } dfa_execution_history;
 
 
-dfa_execution_history dfa_core_execute(const char *row2eval, char *alphabet, int **tanstition_table, int *list_acceptance_states);
+struct dfa_execution_history dfa_core_execute(const char *row2eval, char *alphabet, int **tanstition_table, int *list_acceptance_states);
 
 #endif
