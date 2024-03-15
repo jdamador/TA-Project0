@@ -16,56 +16,59 @@
  * followed to complete the DFA execution.
  */
 
-struct dfa_execution_history dfa_core_execute(const char *row, char *alphabet, int **transition_table, int *list_acceptance_states)
+dfa_execution_history dfa_core_execute(const char *row, char *alphabet, int **transition_table, int *list_acceptance_states)
 {
-        // 
-        struct dfa_transition *current_transition = (struct dfa_transition *)calloc(1, sizeof(struct dfa_transition));
-        //dfa_transition *next_transition = (dfa_transition *)calloc(1, sizeof(dfa_transition));
-        struct dfa_transition *last_transition = current_transition;
-        struct dfa_execution_history result = (struct dfa_execution_history){.state = 0,
-                                                               .transition_history = current_transition};
-        
-        int input_index = 0;
-        int state_index = 0;
-        int alphabet_index = 0;
-        int acceptance_index = 0;
+  //
+  dfa_t *current_transition = (dfa_t *)calloc(1, sizeof(struct dfa_transition));
+  // dfa_transition *next_transition = (dfa_transition *)calloc(1, sizeof(dfa_transition));
+  dfa_t*last_transition = current_transition;
+  dfa_execution_history result = (dfa_execution_history){.state = 0,
+                                                         .transition_history = current_transition};
 
-        // Iterate over input string
-        while (row[input_index] != '\0') {
-          // Update current transition data
-          current_transition->symbol = row[input_index];
-          current_transition->from = state_index;
+  int input_index = 0;
+  int state_index = 0;
+  int alphabet_index = 0;
+  //int acceptance_index = 0;
 
-          // Find index alphabet position of the input char
-          while(alphabet_index != -1 || row[input_index] != alphabet[alphabet_index]) {
-            alphabet_index++;
-            if (alphabet[alphabet_index] == '\0') {
-              alphabet_index = -1;
-            }
-          } 
+  // Iterate over input string
+  while (row[input_index] != '\0')
+  {
+    // Update current transition data
+    current_transition->symbol = row[input_index];
+    current_transition->from = state_index;
 
-          // Move to new state
-          if (alphabet_index != -1){
-            state_index = transition_table[state_index][alphabet_index];
-            current_transition->to = state_index;
+    // Find index alphabet position of the input char
+    while (alphabet_index != -1 || row[input_index] != alphabet[alphabet_index])
+    {
+      alphabet_index++;
+      if (alphabet[alphabet_index] == '\0')
+      {
+        alphabet_index = -1;
+      }
+    }
 
-            // Check acceptance
-            //result.state = list_acceptance_states[state_index];  
-          //} else {
-            //result.state = 0;   
-          }
-         
-          alphabet_index = 0;
-          current_transition->next = (struct dfa_transition *)calloc(1, sizeof(struct dfa_transition));
-          last_transition = current_transition;
-          current_transition = current_transition->next;   
-        }
-        // free memory
-        last_transition->next = NULL;
-        free(current_transition);
-        
-        // Check acceptance
-        result.state = list_acceptance_states[state_index];  
-        return result;
+    // Move to new state
+    if (alphabet_index != -1)
+    {
+      state_index = transition_table[state_index][alphabet_index];
+      current_transition->to = state_index;
+
+      // Check acceptance
+      // result.state = list_acceptance_states[state_index];
+      //} else {
+      // result.state = 0;
+    }
+
+    alphabet_index = 0;
+    current_transition->next = (struct dfa_transition *)calloc(1, sizeof(struct dfa_transition));
+    last_transition = current_transition;
+    current_transition = current_transition->next;
+  }
+  // free memory
+  last_transition->next = NULL;
+  free(current_transition);
+
+  // Check acceptance
+  result.state = list_acceptance_states[state_index];
+  return result;
 }
-
