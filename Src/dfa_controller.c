@@ -68,3 +68,4 @@ struct dfa_execution_history dfa_core_execute(const char *row, char *alphabet, i
         result.state = list_acceptance_states[state_index];  
         return result;
 }
+

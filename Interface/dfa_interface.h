@@ -14,12 +14,10 @@ struct dfa_transition {
 //typedef struct dfa_transition dfa_t_manager;
 
 // This element is used to manage the final result after execute a DFA.
-//typedef struct
-struct dfa_execution_history{
+typedef struct{
     int state; // 1: approved | 0: rejected.
-    struct dfa_transition *transition_history;
-}; 
-//} dfa_execution_history;
+    dfa_t_manager *transition_history;
+} dfa_execution_history;
 
 
 struct dfa_execution_history dfa_core_execute(const char *row2eval, char *alphabet, int **tanstition_table, int *list_acceptance_states);
