@@ -9,15 +9,14 @@ struct dfa_transition {
     int from;
     int to;
     struct dfa_transition *next;
-}
+};
 
 typedef struct dfa_transition dfa_t_manager;
 
 // This element is used to manage the final result after execute a DFA.
-typedef struct
-{
+typedef struct{
     int state; // 1: approved | 0: rejected.
-    dfa_transition *transition_history;
+    dfa_t_manager *transition_history;
 } dfa_execution_history;
 
 

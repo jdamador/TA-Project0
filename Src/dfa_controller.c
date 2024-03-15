@@ -25,5 +25,5 @@ dfa_execution_history dfa_core_execute(const char *row, char *alphabet, int **tr
         Code here.
 
     */
-    return dfa_steps_history
+    return result;
 }
