@@ -16,13 +16,13 @@
  * followed to complete the DFA execution.
  */
 
-dfa_execution_history dfa_core_execute(const char *row, char *alphabet, int **transition_table, int *list_acceptance_states)
+struct dfa_execution_history dfa_core_execute(const char *row, char *alphabet, int **transition_table, int *list_acceptance_states)
 {
         // 
-        dfa_transition *current_transition = (dfa_transition *)calloc(1, sizeof(dfa_transition));
+        struct dfa_transition *current_transition = (struct dfa_transition *)calloc(1, sizeof(struct dfa_transition));
         //dfa_transition *next_transition = (dfa_transition *)calloc(1, sizeof(dfa_transition));
-        dfa_transition *last_transition = current_transition;
-        dfa_execution_history result = (dfa_execution_history){.state = 0,
+        struct dfa_transition *last_transition = current_transition;
+        struct dfa_execution_history result = (struct dfa_execution_history){.state = 0,
                                                                .transition_history = current_transition};
         
         int input_index = 0;
@@ -47,7 +47,7 @@ dfa_execution_history dfa_core_execute(const char *row, char *alphabet, int **tr
           // Move to new state
           if (alphabet_index != -1){
             state_index = transition_table[state_index][alphabet_index];
-            current_transition.to = state_index;
+            current_transition->to = state_index;
 
             // Check acceptance
             //result.state = list_acceptance_states[state_index];  
@@ -56,9 +56,9 @@ dfa_execution_history dfa_core_execute(const char *row, char *alphabet, int **tr
           }
          
           alphabet_index = 0;
-          current_transition->next = (dfa_transition *)calloc(1, sizeof(dfa_transition));
-          last_transition->current_step;
-          current_transition = current_transition->next_state;   
+          current_transition->next = (struct dfa_transition *)calloc(1, sizeof(struct dfa_transition));
+          last_transition = current_transition;
+          current_transition = current_transition->next;   
         }
         // free memory
         last_transition->next = NULL;
