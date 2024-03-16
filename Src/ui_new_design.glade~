@@ -142,16 +142,16 @@
           </packing>
         </child>
         <child>
-          <object class="GtkScrolledWindow" id="scrolled_window">
-            <property name="name">scrolled_window</property>
+          <object class="GtkScrolledWindow" id="scrolled_layout">
+            <property name="name">scrolled_layout</property>
             <property name="width-request">900</property>
             <property name="height-request">471</property>
             <property name="visible">True</property>
             <property name="can-focus">True</property>
             <property name="shadow-type">in</property>
             <child>
-              <object class="GtkViewport" id="table_container">
-                <property name="name">table_container</property>
+              <object class="GtkViewport" id="dfa_table">
+                <property name="name">dfa_table</property>
                 <property name="visible">True</property>
                 <property name="can-focus">False</property>
                 <child>
@@ -276,7 +276,8 @@
           </packing>
         </child>
         <child>
-          <object class="GtkSpinButton" id="spin1">
+          <object class="GtkSpinButton" id="sp_n_states">
+            <property name="name">sp_n_states</property>
             <property name="visible">True</property>
             <property name="can-focus">True</property>
             <property name="events">GDK_EXPOSURE_MASK | GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_ENTER_NOTIFY_MASK</property>
@@ -288,8 +289,8 @@
           </packing>
         </child>
         <child>
-          <object class="GtkSpinButton">
-            <property name="name">txt_alphabet</property>
+          <object class="GtkSpinButton" id="sp_m_alphabet">
+            <property name="name">sp_m_alphabet</property>
             <property name="visible">True</property>
             <property name="can-focus">True</property>
             <property name="adjustment">adjustment2</property>
