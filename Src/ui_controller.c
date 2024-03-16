@@ -319,6 +319,12 @@ void custom_name_changed_event(GtkEntry *entry, gpointer typed_data)
 void alphabet_symbol_changed_event(GtkEntry *entry, gpointer typed_data)
 {
     // TODO: validations on alphabet symbols entries should be here.
+
+    // In this way you can get the text to validate if it meets the requirements.
+    // const gchar *text = gtk_entry_get_text(entry);
+
+    // And in this way you can set the text in the entry
+    // gtk_entry_set_text(entry, "-");
 }
 
 /*
