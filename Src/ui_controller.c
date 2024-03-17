@@ -420,7 +420,11 @@ void alphabet_symbol_changed_event(GtkEntry *entry, gpointer typed_data)
  * Transition Changed Event: this method is added to every transition entry, so when it change, sent a event.
  *
  * Parameters:
- *   entry: the entry who generated the event.
+ *   strip2eval: the strip which will be evaluated.
+ *   alphabet_symbols: all the alphabet symbols (uniques).
+ *   transition_table: the table with the transitions between states.
+ *   acceptance_states: the list of acceptance states.
+ *   state_names:   the list of new states names, they are empties if nothing is typed by the user.
  *   typed_data: the data typed in the entry.
  * Output:
  *   void.
@@ -436,8 +440,10 @@ void execute_strip_evaluation(const char *strip2eval, char *alphabet_symbols, in
     int **fixed_transition_table = NULL;
     fix_ui_transition_table(&fixed_transition_table, transition_table, n_states, m_alphabet);
 
+    // Call the method to solve the DFA for this specific strip.
     dfa_execution_history dfa_history = solve_dfa(strip2eval, alphabet_symbols, fixed_transition_table, acceptance_states);
 
+    // Base in the DFA execution history if returns 1 is approved, if not is rejected.
     if (dfa_history.is_accepted == 1)
     {
         GdkRGBA new_color;
@@ -452,17 +458,31 @@ void execute_strip_evaluation(const char *strip2eval, char *alphabet_symbols, in
         gtk_widget_override_background_color(GTK_WIDGET(gtk_builder_get_object(ui_builder, "final_result")), GTK_STATE_NORMAL, &new_color);
         gtk_label_set_text(GTK_LABEL(GTK_WIDGET(gtk_builder_get_object(ui_builder, "final_result"))), (const gchar *)"Rejected");
     }
-
+    
     // TODO: here should be located the buffer to print the transition states to solve the automaton.
 
+
+
     // Free memory to avoid segmentation fault.
-    for (size_t i = 0; i < states_num; i++)
+    for (size_t i = 0; i < n_states; i++)
     {
         free(fixed_transition_table[i]);
     }
     free(fixed_transition_table);
 }
 
+
+/*
+ * Fix UI Transition Table: this method is in charge of fix the positions relative from screen layout to the logic matrix.
+ *
+ * Parameters:
+ *   fixed_table: is a pointer that storage the fixed table.
+ *   original_table: the variable that storage the table which need to be fixed.
+ *   n_states: num of states for this automaton.
+ *   m_alphabet: num of symbols of the alphabet for this automaton.
+ * Output:
+ *   void
+ */
 void fix_ui_transition_table(int ***fixed_table, int **original_table, int n_states, int m_alphabet)
 {
     *fixed_table = (int **)malloc(sizeof(int *) * n_states);
@@ -471,7 +491,6 @@ void fix_ui_transition_table(int ***fixed_table, int **original_table, int n_sta
     {
         (*fixed_table)[i] = malloc(sizeof(int) * m_alphabet);
     }
-
     for (size_t i = 0; i < n_states; i++)
     {
         for (size_t j = 0; j < m_alphabet; j++)
