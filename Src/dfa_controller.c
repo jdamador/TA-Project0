@@ -9,66 +9,110 @@
 #include <stddef.h>
 #include <stdlib.h>
 
+// Simple definition of methods, this allow the program to call the methods in wherever part of the program without having problems of hierarchy.
+int decode_symbol(char, char *);
+
 /*
- * This method is the handler for DFA core code.
- * Input: row to eval, alphabet (Σ), transition table for all states, list acceptance states.
- * Output: an dfa_execution_history element that contains state (1-accepted, 0-rejected) and a linked list with all the steps
+ * Display_UI: This method is the handler for DFA core code.
+ *
+ * Parameters:
+ *   row to eval, alphabet (Σ), transition table for all states, list acceptance states.
+ *
+ * Output:
+ *    an dfa_execution_history element that contains state (1-accepted, 0-rejected) and a linked list with all the steps
  * followed to complete the DFA execution.
  */
 
-dfa_execution_history dfa_core_execute(const char *strip2eval, char *alphabet, int **transition_table, int *list_acceptance_states)
+dfa_execution_history solve_dfa(const char *strip2eval, char *alphabet, int **transition_table, int *list_acceptance_states)
 {
-  //
-  dfa_t *current_transition = (dfa_t *)calloc(1, sizeof(struct dfa_transition));
-  // dfa_transition *next_transition = (dfa_transition *)calloc(1, sizeof(dfa_transition));
-  dfa_t*last_transition = current_transition;
-  dfa_execution_history result = (dfa_execution_history){.state = 0,
-                                                         .transition_history = current_transition};
+  // First state is always the initial.
+  char *strip = (char *)strip2eval;
+  int state = 0;
 
-  int input_index = 0;
-  int state_index = 0;
-  int alphabet_index = 0;
-  //int acceptance_index = 0;
+  // Define the current transition state, and the last transition state: Handle FROM - TO.
+  dfa_transitions *transition = (dfa_transitions *)calloc(1, sizeof(struct dfa_transition));
+  dfa_transitions *last_transition = transition;
+  dfa_execution_history result = (dfa_execution_history){.is_accepted = 0, .transition_history = NULL};
 
-  // Iterate over input string
-  while (strip2eval[input_index] != '\0')
+  // Run the loop for every strip's symbol.
+  while (*strip)
   {
-    // Update current transition data
-    current_transition->symbol = strip2eval[input_index];
-    current_transition->from = state_index;
-
-    // Find index alphabet position of the input char
-    while (alphabet_index != -1 || strip2eval[input_index] != alphabet[alphabet_index])
+    
+    // Assign the fist state.
+    if (result.transition_history == NULL)
     {
-      alphabet_index++;
-      if (alphabet[alphabet_index] == '\0')
-      {
-        alphabet_index = -1;
-      }
+      result.transition_history = transition;
     }
 
-    // Move to new state
-    if (alphabet_index != -1)
+    // Set a new pointer for the current strip's symbol which is being analyzed.
+    char current_symbol = *strip++;
+    transition->symbol = current_symbol;
+    transition->from = state;
+
+    // We have the symbol of the alphabet, so we need to extract it and replace by the postion instead.
+    int symbol_position = decode_symbol(current_symbol, alphabet);
+
+    // If the symbol is -1, it means dont exist. So we define a non existant transition.
+    if (symbol_position == -1)
     {
-      state_index = transition_table[state_index][alphabet_index];
-      current_transition->to = state_index;
+      transition->to = -1;
+      transition->next = NULL;
 
-      // Check acceptance
-      // result.state = list_acceptance_states[state_index];
-      //} else {
-      // result.state = 0;
+      return result;
     }
+    
+    // If not is -1, we just add the data to the transition table.
+    state = transition_table[state][symbol_position];
+    transition->to = state;
 
-    alphabet_index = 0;
-    current_transition->next = (struct dfa_transition *)calloc(1, sizeof(struct dfa_transition));
-    last_transition = current_transition;
-    current_transition = current_transition->next;
+    // If the process ended and the last state was -1, it means that ended in a rejected state, so we just set rejected as final result.
+    if (state == -1)
+    {
+      transition->next = NULL;
+
+      return result;
+    }
+    // If the strip evaluation is not ended, we just move forward to the next element to eval.
+    transition->next = (dfa_transitions *)calloc(1, sizeof(dfa_transitions));
+    last_transition = transition;
+    transition = transition->next;
   }
-  // free memory
-  last_transition->next = NULL;
-  free(current_transition);
 
-  // Check acceptance
-  result.state = list_acceptance_states[state_index];
+  last_transition->next = NULL;
+
+  // Free memory to avoid segmentation fault.
+  free(transition);
+
+  // At the en we complete the strip eval and set the acceptance state as the final result of the evaluation.
+  result.is_accepted = list_acceptance_states[state];
+
   return result;
+}
+
+
+/*
+ * Decode Symbol: This method convert a symbol element into a position in the alphabet array.
+ *
+ * Parameters:
+ *   symbol: symbol to locate.
+ *   alphabet: alphabet where the symbol should be located.
+ *
+ * Output:
+ *   the position of the symbol in the alphabet array.
+ */
+
+int decode_symbol(char symbol, char *alphabet)
+{
+  size_t pos = 0;
+  while (*alphabet)
+  {
+    if (symbol == *alphabet++)
+    {
+      return pos;
+    }
+    pos++;
+  }
+
+  // Symbol does not exist
+  return -1;
 }

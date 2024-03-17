@@ -34,12 +34,13 @@ gint m_alphabet;
 
 // gchar alphabet[1024];
 
-// DFA table arrays;
+// DFA visual table arrays;
 GtkWidget ***transition_entries;
 GtkWidget **state_names_entries;
 GtkWidget **alphabet_symbol_entries;
 GtkWidget **acceptance_checkboxes;
-// DFA data arrays;
+
+// DFA data arrays -> here is storage the DFA after evaluate button is pressed.
 int **transition_table;
 int *acceptance_states;
 char *alphabet_symbols;
@@ -56,6 +57,9 @@ void alphabet_symbol_changed_event(GtkEntry *entry, gpointer typed_data);
 void custom_name_changed_event(GtkEntry *entry, gpointer typed_data);
 void transition_changed_event(GtkEntry *entry, gpointer typed_data);
 void clear_memory();
+void execute_strip_evaluation(const char *strip2eval, char *alphabet_symbols, int **transition_table, int *acceptance_states, char **state_names);
+void fix_ui_transition_table(int ***fixed_table, int **original_table, int n_states, int m_alphabet);
+
 /*
  * Display_UI: handler to start all the screen elements to be displayed.
  *
@@ -157,10 +161,6 @@ void end_clicked_event(GtkButton *b)
  */
 void settings_clicked_event(GtkButton *b)
 {
-    // TODO: create a clear function to free memory.
-
-    // TODO: set here the code to create the table base on N states and M alphabet members.
-
     // Get n_states and m_alphabet_elements from spin buttons.
     n_states = (int)gtk_spin_button_get_value(GTK_SPIN_BUTTON(gtk_builder_get_object(ui_builder, "sp_n_states")));
     m_alphabet = (int)gtk_spin_button_get_value(GTK_SPIN_BUTTON(gtk_builder_get_object(ui_builder, "sp_m_alphabet")));
@@ -237,17 +237,22 @@ void evaluate_clicked_event(GtkButton *b)
 
     // Run through all state_names to get the state names.
     state_names = (char **)malloc(n_states * sizeof(char *));
-    for(int j = 0; j < n_states; j++) {
+    for (int j = 0; j < n_states; j++)
+    {
         const gchar *text = gtk_entry_get_text(GTK_ENTRY(state_names_entries[j]));
 
         state_names[j] = NULL;
-        if(strlen(text) > 0) {
+        if (strlen(text) > 0)
+        {
             state_names[j] = g_strdup(text);
-        } else {
+        }
+        else
+        {
             state_names[j] = g_strdup_printf("%d", j + 1);
         }
     }
 
+    // Manage which elements must be disable.
     activation_handler(3);
 }
 
@@ -262,9 +267,8 @@ void evaluate_clicked_event(GtkButton *b)
  */
 void eval_strip_clicked_event(GtkButton *b)
 {
-    // TODO: set here the code to evaluate a new strip.
     const gchar *strip2eval = gtk_entry_get_text(GTK_ENTRY(evaluate_strip));
-    dfa_core_execute(strip2eval, alphabet_symbols, transition_table, acceptance_states);
+    execute_strip_evaluation(strip2eval, alphabet_symbols, transition_table, acceptance_states, state_names);
 }
 
 /*
@@ -416,7 +420,11 @@ void alphabet_symbol_changed_event(GtkEntry *entry, gpointer typed_data)
  * Transition Changed Event: this method is added to every transition entry, so when it change, sent a event.
  *
  * Parameters:
- *   entry: the entry who generated the event.
+ *   strip2eval: the strip which will be evaluated.
+ *   alphabet_symbols: all the alphabet symbols (uniques).
+ *   transition_table: the table with the transitions between states.
+ *   acceptance_states: the list of acceptance states.
+ *   state_names:   the list of new states names, they are empties if nothing is typed by the user.
  *   typed_data: the data typed in the entry.
  * Output:
  *   void.
@@ -426,10 +434,75 @@ void transition_changed_event(GtkEntry *entry, gpointer typed_data)
     // TODO: validations on in transitions states entries should be here.
 }
 
-// void clear_memory()
-// {
-//     free(transitions);
-//     free(state_names_entries);
-//     free(alphabet);
-//     free(acceptance_checkboxes);
-// }
+void execute_strip_evaluation(const char *strip2eval, char *alphabet_symbols, int **transition_table, int *acceptance_states, char **state_names)
+{
+    // Fix the positions associated to the visual elements in a logic matrix n_states x m_alphabet.
+    int **fixed_transition_table = NULL;
+    fix_ui_transition_table(&fixed_transition_table, transition_table, n_states, m_alphabet);
+
+    // Call the method to solve the DFA for this specific strip.
+    dfa_execution_history dfa_history = solve_dfa(strip2eval, alphabet_symbols, fixed_transition_table, acceptance_states);
+
+    // Base in the DFA execution history if returns 1 is approved, if not is rejected.
+    if (dfa_history.is_accepted == 1)
+    {
+        GdkRGBA new_color;
+        gdk_rgba_parse(&new_color, "green");
+        gtk_widget_override_background_color(GTK_WIDGET(gtk_builder_get_object(ui_builder, "final_result")), GTK_STATE_NORMAL, &new_color);
+        gtk_label_set_text(GTK_LABEL(GTK_WIDGET(gtk_builder_get_object(ui_builder, "final_result"))), (const gchar *)"Approved");
+    }
+    else
+    {
+        GdkRGBA new_color;
+        gdk_rgba_parse(&new_color, "red");
+        gtk_widget_override_background_color(GTK_WIDGET(gtk_builder_get_object(ui_builder, "final_result")), GTK_STATE_NORMAL, &new_color);
+        gtk_label_set_text(GTK_LABEL(GTK_WIDGET(gtk_builder_get_object(ui_builder, "final_result"))), (const gchar *)"Rejected");
+    }
+    
+    // TODO: here should be located the buffer to print the transition states to solve the automaton.
+
+
+
+    // Free memory to avoid segmentation fault.
+    for (size_t i = 0; i < n_states; i++)
+    {
+        free(fixed_transition_table[i]);
+    }
+    free(fixed_transition_table);
+}
+
+
+/*
+ * Fix UI Transition Table: this method is in charge of fix the positions relative from screen layout to the logic matrix.
+ *
+ * Parameters:
+ *   fixed_table: is a pointer that storage the fixed table.
+ *   original_table: the variable that storage the table which need to be fixed.
+ *   n_states: num of states for this automaton.
+ *   m_alphabet: num of symbols of the alphabet for this automaton.
+ * Output:
+ *   void
+ */
+void fix_ui_transition_table(int ***fixed_table, int **original_table, int n_states, int m_alphabet)
+{
+    *fixed_table = (int **)malloc(sizeof(int *) * n_states);
+
+    for (size_t i = 0; i < n_states; i++)
+    {
+        (*fixed_table)[i] = malloc(sizeof(int) * m_alphabet);
+    }
+    for (size_t i = 0; i < n_states; i++)
+    {
+        for (size_t j = 0; j < m_alphabet; j++)
+        {
+            if (original_table[i][j] == -1 || original_table[i][j] > n_states)
+            {
+                (*fixed_table)[i][j] = -1;
+            }
+            else
+            {
+                (*fixed_table)[i][j] = original_table[i][j] - 1;
+            }
+        }
+    }
+}
