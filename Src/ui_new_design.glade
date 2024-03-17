@@ -182,8 +182,8 @@
           </packing>
         </child>
         <child>
-          <object class="GtkLabel" id="lbl_result">
-            <property name="name">lbl_result</property>
+          <object class="GtkLabel" id="final_result">
+            <property name="name">final_result</property>
             <property name="width-request">173</property>
             <property name="height-request">31</property>
             <property name="visible">True</property>
