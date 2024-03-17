@@ -95,8 +95,8 @@
           </packing>
         </child>
         <child>
-          <object class="GtkEntry" id="eval_row">
-            <property name="name">eval_row</property>
+          <object class="GtkEntry" id="evaluate_strip">
+            <property name="name">evaluate_strip</property>
             <property name="width-request">525</property>
             <property name="height-request">32</property>
             <property name="visible">True</property>

@@ -16,7 +16,7 @@
  * followed to complete the DFA execution.
  */
 
-dfa_execution_history dfa_core_execute(const char *row, char *alphabet, int **transition_table, int *list_acceptance_states)
+dfa_execution_history dfa_core_execute(const char *strip2eval, char *alphabet, int **transition_table, int *list_acceptance_states)
 {
   //
   dfa_t *current_transition = (dfa_t *)calloc(1, sizeof(struct dfa_transition));
@@ -31,14 +31,14 @@ dfa_execution_history dfa_core_execute(const char *row, char *alphabet, int **tr
   //int acceptance_index = 0;
 
   // Iterate over input string
-  while (row[input_index] != '\0')
+  while (strip2eval[input_index] != '\0')
   {
     // Update current transition data
-    current_transition->symbol = row[input_index];
+    current_transition->symbol = strip2eval[input_index];
     current_transition->from = state_index;
 
     // Find index alphabet position of the input char
-    while (alphabet_index != -1 || row[input_index] != alphabet[alphabet_index])
+    while (alphabet_index != -1 || strip2eval[input_index] != alphabet[alphabet_index])
     {
       alphabet_index++;
       if (alphabet[alphabet_index] == '\0')

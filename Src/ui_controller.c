@@ -4,7 +4,7 @@
  * Author: Daniel A, Sebastian G, Josef R, Gerardo G.
  * Date: 2024
  */
-
+#include "dfa_interface.h"
 #include <ctype.h>
 #include <glib.h>
 #include <gtk/gtk.h>
@@ -19,24 +19,31 @@
 // UI global objects to create visual elements.
 GtkBuilder *ui_builder;
 GtkWidget *window;
-GtkWidget *dfa_table;
+GtkWidget *visual_transition_table;
 GtkWidget *grid_layout;
 GtkWidget *scrolled_layout;
 
 // Buttons objects to handle the disable/enable event.
-GtkWidget *evaluate;
+GtkWidget *evaluate_button;
+GtkWidget *evaluate_strip_button;
 GtkWidget *evaluate_strip;
 
 // Automaton variable settings;
 gint n_states;
 gint m_alphabet;
-gchar alphabet[1024];
+
+// gchar alphabet[1024];
 
 // DFA table arrays;
-GtkWidget ***transitions;
-GtkWidget **state_names;
-GtkWidget **alphabet_element;
+GtkWidget ***transition_entries;
+GtkWidget **state_names_entries;
+GtkWidget **alphabet_symbol_entries;
 GtkWidget **acceptance_checkboxes;
+// DFA data arrays;
+int **transition_table;
+int *acceptance_states;
+char *alphabet_symbols;
+char **state_names;
 
 // Simple definition of methods, this allow the program to call the methods in wherever part of the program without having problems of hierarchy.
 void end_clicked_event(GtkButton *b);
@@ -48,6 +55,7 @@ void generate_dfa_settings_table();
 void alphabet_symbol_changed_event(GtkEntry *entry, gpointer typed_data);
 void custom_name_changed_event(GtkEntry *entry, gpointer typed_data);
 void transition_changed_event(GtkEntry *entry, gpointer typed_data);
+void clear_memory();
 /*
  * Display_UI: handler to start all the screen elements to be displayed.
  *
@@ -75,10 +83,11 @@ int display_ui(int argc, char *argv[])
     gtk_builder_connect_signals(ui_builder, NULL);
 
     // Get visual elements to manipulate by code.
-    evaluate = GTK_WIDGET(gtk_builder_get_object(ui_builder, "btn_evaluate"));
-    evaluate_strip = GTK_WIDGET(gtk_builder_get_object(ui_builder, "btn_evaluate_strip"));
-    dfa_table = GTK_WIDGET(gtk_builder_get_object(ui_builder, "dfa_table"));
+    evaluate_button = GTK_WIDGET(gtk_builder_get_object(ui_builder, "btn_evaluate"));
+    evaluate_strip_button = GTK_WIDGET(gtk_builder_get_object(ui_builder, "btn_evaluate_strip"));
+    visual_transition_table = GTK_WIDGET(gtk_builder_get_object(ui_builder, "dfa_table"));
     scrolled_layout = GTK_WIDGET(gtk_builder_get_object(ui_builder, "scrolled_layout"));
+    evaluate_strip = GTK_WIDGET(gtk_builder_get_object(ui_builder, "evaluate_strip"));
 
     // Deactivate the buttons as initial state.
     activation_handler(1);
@@ -103,17 +112,20 @@ void activation_handler(int option)
     {
     case 1:
         // Start option: evaluate button and evaluate_strip are disable.
-        gtk_widget_set_sensitive(evaluate, 0);
+        gtk_widget_set_sensitive(evaluate_button, 0);
+        gtk_widget_set_sensitive(evaluate_strip_button, 0);
         gtk_widget_set_sensitive(evaluate_strip, 0);
         break;
     case 2:
         // after settings are made: evaluate button is enable, but evaluate_strip keeps disable.
-        gtk_widget_set_sensitive(evaluate, 1);
+        gtk_widget_set_sensitive(evaluate_button, 1);
+        gtk_widget_set_sensitive(evaluate_strip_button, 0);
         gtk_widget_set_sensitive(evaluate_strip, 0);
         break;
     case 3:
         // after evaluate is pressed: DFA is ready so, evaluate button is disable again, and evaluate_strip is enable.
-        gtk_widget_set_sensitive(evaluate, 0);
+        gtk_widget_set_sensitive(evaluate_button, 0);
+        gtk_widget_set_sensitive(evaluate_strip_button, 1);
         gtk_widget_set_sensitive(evaluate_strip, 1);
         break;
     }
@@ -121,7 +133,8 @@ void activation_handler(int option)
 
 /*
  * End Clicked Event: handler the end event, just finish the program.
- *
+ *La Tortura
+
  * Parameters:
  *   GtkButton: the event generated when the button is clicked.
  *
@@ -167,7 +180,75 @@ void settings_clicked_event(GtkButton *b)
  */
 void evaluate_clicked_event(GtkButton *b)
 {
-    // TODO: set here the code to create the DFA.
+    // Free all array elements;
+    free(state_names);
+    free(alphabet_symbols);
+    free(acceptance_states);
+    free(transition_table);
+
+    // Create a matrix of size n_states x m_alphabet.
+    transition_table = (int **)malloc(n_states * sizeof(int *));
+    for (int i = 0; i < n_states; i++)
+    {
+        transition_table[i] = (int *)malloc(m_alphabet * sizeof(int));
+    }
+
+    // Run through all transitions and get the values to create the transition table.
+    for (int i = 0; i < n_states; i++)
+    {
+        for (int j = 0; j < m_alphabet; j++)
+        {
+            GtkWidget *entry = transition_entries[i][j];
+            const gchar *text = gtk_entry_get_text(GTK_ENTRY(entry));
+            int value = -1;
+
+            if (strcmp(text, "-") == 0)
+            {
+                value = -1;
+            }
+            else
+            {
+                value = atoi(text);
+            }
+
+            transition_table[i][j] = value;
+        }
+    }
+
+    // Run through the acceptance array to get if checkboxes are checked or not.
+    acceptance_states = (int *)malloc(n_states * sizeof(int));
+    for (int i = 0; i < n_states; i++)
+    {
+        GtkWidget *checkbox = acceptance_checkboxes[i];
+        gboolean is_active = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(checkbox));
+        acceptance_states[i] = is_active ? 1 : 0;
+    }
+
+    // Run through the alphabet elements to get the symbols.
+    alphabet_symbols = (char *)malloc(m_alphabet * sizeof(char));
+    for (int j = 0; j < m_alphabet; j++)
+    {
+        const char *text = gtk_entry_get_text(GTK_ENTRY(alphabet_symbol_entries[j]));
+        char cstr[2];
+        cstr[0] = text[0];
+        cstr[1] = '\0';
+        alphabet_symbols[j] = cstr[0];
+    }
+
+    // Run through all state_names to get the state names.
+    state_names = (char **)malloc(n_states * sizeof(char *));
+    for(int j = 0; j < n_states; j++) {
+        const gchar *text = gtk_entry_get_text(GTK_ENTRY(state_names_entries[j]));
+
+        state_names[j] = NULL;
+        if(strlen(text) > 0) {
+            state_names[j] = g_strdup(text);
+        } else {
+            state_names[j] = g_strdup_printf("%d", j + 1);
+        }
+    }
+
+    activation_handler(3);
 }
 
 /*
@@ -182,6 +263,8 @@ void evaluate_clicked_event(GtkButton *b)
 void eval_strip_clicked_event(GtkButton *b)
 {
     // TODO: set here the code to evaluate a new strip.
+    const gchar *strip2eval = gtk_entry_get_text(GTK_ENTRY(evaluate_strip));
+    dfa_core_execute(strip2eval, alphabet_symbols, transition_table, acceptance_states);
 }
 
 /*
@@ -199,17 +282,19 @@ void generate_dfa_settings_table()
     activation_handler(2);
 
     // Clear the table and its container.
-    gtk_container_remove(GTK_CONTAINER(dfa_table), grid_layout);
+    gtk_container_remove(GTK_CONTAINER(visual_transition_table), grid_layout);
+    // clear_memory();
+
     // Allocate memory for the arrays to create the table.
-    transitions = (GtkWidget ***)malloc(n_states * sizeof(GtkWidget **));
-    state_names = (GtkWidget **)malloc(n_states * sizeof(GtkWidget *));
-    alphabet_element = (GtkWidget **)malloc(m_alphabet * sizeof(GtkWidget *));
+    transition_entries = (GtkWidget ***)malloc(n_states * sizeof(GtkWidget **));
+    state_names_entries = (GtkWidget **)malloc(n_states * sizeof(GtkWidget *));
+    alphabet_symbol_entries = (GtkWidget **)malloc(m_alphabet * sizeof(GtkWidget *));
     acceptance_checkboxes = (GtkWidget **)malloc(n_states * sizeof(GtkWidget *));
 
     // For each state, we need to create m_alphabet columns. So we allocate memory for that.
     for (int i = 0; i < n_states; i++)
     {
-        transitions[i] = (GtkWidget **)malloc(m_alphabet * sizeof(GtkWidget *));
+        transition_entries[i] = (GtkWidget **)malloc(m_alphabet * sizeof(GtkWidget *));
     }
 
     // Create a new grid layout to set all new elements in the UI.
@@ -229,7 +314,7 @@ void generate_dfa_settings_table()
         gtk_entry_set_max_length(GTK_ENTRY(new_alphabet_entry), 1);                                       // Max length = 1.
         g_signal_connect(new_alphabet_entry, "changed", G_CALLBACK(alphabet_symbol_changed_event), NULL); // When entry text changed generate an event.
         gtk_grid_attach(GTK_GRID(grid_layout), new_alphabet_entry, i + 3, 0, 1, 1);
-        alphabet_element[i] = new_alphabet_entry;
+        alphabet_symbol_entries[i] = new_alphabet_entry;
         current_symbol++;
         if (current_symbol > 'z')
         {
@@ -257,7 +342,7 @@ void generate_dfa_settings_table()
         gtk_entry_set_placeholder_text(GTK_ENTRY(custom_name), "custom name");
         g_signal_connect(custom_name, "changed", G_CALLBACK(custom_name_changed_event), NULL);
         gtk_grid_attach(GTK_GRID(grid_layout), custom_name, 2, i, 1, 1);
-        state_names[i - 1] = custom_name;
+        state_names_entries[i - 1] = custom_name;
 
         // if i = 1, we know is the first element in the transition table, so we have to mark the elements with a signal.
         if (i == 1)
@@ -283,13 +368,13 @@ void generate_dfa_settings_table()
             gtk_entry_set_text(GTK_ENTRY(new_transition), "-");
             g_signal_connect(new_transition, "changed", G_CALLBACK(transition_changed_event), NULL);
             gtk_grid_attach(GTK_GRID(grid_layout), new_transition, j + 3, i, 1, 1);
-            transitions[i - 1][j] = new_transition;
+            transition_entries[i - 1][j] = new_transition;
         }
     }
 
     // Add the grid_layout to the screen.
-    gtk_container_add(GTK_CONTAINER(dfa_table), grid_layout);
-    gtk_container_add(GTK_CONTAINER(scrolled_layout), dfa_table);
+    gtk_container_add(GTK_CONTAINER(visual_transition_table), grid_layout);
+    gtk_container_add(GTK_CONTAINER(scrolled_layout), visual_transition_table);
     gtk_widget_show_all(window);
 }
 
@@ -340,3 +425,11 @@ void transition_changed_event(GtkEntry *entry, gpointer typed_data)
 {
     // TODO: validations on in transitions states entries should be here.
 }
+
+// void clear_memory()
+// {
+//     free(transitions);
+//     free(state_names_entries);
+//     free(alphabet);
+//     free(acceptance_checkboxes);
+// }
