@@ -20,6 +20,6 @@ typedef struct{
 } dfa_execution_history;
 
 
-dfa_execution_history dfa_core_execute(const char *row2eval, char *alphabet, int **tanstition_table, int *list_acceptance_states);
+dfa_execution_history dfa_core_execute(const char *strip2eval, char *alphabet, int **tanstition_table, int *list_acceptance_states);
 
 #endif
