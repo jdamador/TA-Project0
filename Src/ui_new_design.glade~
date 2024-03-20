@@ -1,9 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<<<<<<< HEAD
-<!-- Generated with glade 3.40.0 -->
-=======
 <!-- Generated with glade 3.38.2 -->
->>>>>>> main
 <!-- Generated with Glade 3.38.2 -->
 <interface>
   <requires lib="gtk+" version="3.24"/>
@@ -38,11 +34,7 @@
     <property name="stock">gtk-edit</property>
   </object>
   <object class="GtkTextBuffer" id="textbuffer1"/>
-<<<<<<< HEAD
-  <object class="GtkWindow" id="main_window">
-=======
   <object class="GtkWindow" id="window">
->>>>>>> main
     <property name="can-focus">False</property>
     <property name="title" translatable="yes">GTK Application</property>
     <property name="default-width">1280</property>
@@ -85,15 +77,9 @@
           </packing>
         </child>
         <child>
-<<<<<<< HEAD
-          <object class="GtkButton" id="btn_start">
-            <property name="label" translatable="yes">Set Settings</property>
-            <property name="name">btn_start</property>
-=======
           <object class="GtkButton" id="btn_set_settings">
             <property name="label" translatable="yes">Set Settings</property>
             <property name="name">btn_set_settings</property>
->>>>>>> main
             <property name="width-request">171</property>
             <property name="height-request">33</property>
             <property name="visible">True</property>
@@ -101,11 +87,7 @@
             <property name="receives-default">True</property>
             <property name="image">image2</property>
             <property name="always-show-image">True</property>
-<<<<<<< HEAD
-            <signal name="clicked" handler="on_btn_start_clicked" swapped="no"/>
-=======
             <signal name="clicked" handler="settings_clicked_event" swapped="no"/>
->>>>>>> main
           </object>
           <packing>
             <property name="x">920</property>
@@ -113,13 +95,8 @@
           </packing>
         </child>
         <child>
-<<<<<<< HEAD
-          <object class="GtkEntry" id="eval_row">
-            <property name="name">eval_row</property>
-=======
           <object class="GtkEntry" id="evaluate_strip">
             <property name="name">evaluate_strip</property>
->>>>>>> main
             <property name="width-request">525</property>
             <property name="height-request">32</property>
             <property name="visible">True</property>
@@ -131,15 +108,9 @@
           </packing>
         </child>
         <child>
-<<<<<<< HEAD
-          <object class="GtkButton" id="btn_eval">
-            <property name="label" translatable="yes">EVALUATE</property>
-            <property name="name">btn_eval</property>
-=======
           <object class="GtkButton" id="btn_evaluate">
             <property name="label" translatable="yes">EVALUATE</property>
             <property name="name">btn_evaluate</property>
->>>>>>> main
             <property name="width-request">216</property>
             <property name="height-request">47</property>
             <property name="visible">True</property>
@@ -147,11 +118,7 @@
             <property name="receives-default">True</property>
             <property name="image">image1</property>
             <property name="always-show-image">True</property>
-<<<<<<< HEAD
-            <signal name="clicked" handler="on_btn_eval_clicked" swapped="no"/>
-=======
             <signal name="clicked" handler="evaluate_clicked_event" swapped="no"/>
->>>>>>> main
           </object>
           <packing>
             <property name="x">688</property>
@@ -175,56 +142,16 @@
           </packing>
         </child>
         <child>
-<<<<<<< HEAD
-          <object class="GtkSeparator">
-            <property name="width-request">310</property>
-            <property name="height-request">29</property>
-            <property name="visible">True</property>
-            <property name="can-focus">False</property>
-          </object>
-          <packing>
-            <property name="x">595</property>
-            <property name="y">77</property>
-          </packing>
-        </child>
-        <child>
-          <object class="GtkLabel" id="lbl_message">
-            <property name="name">lbl_message</property>
-            <property name="width-request">310</property>
-            <property name="height-request">31</property>
-            <property name="visible">True</property>
-            <property name="can-focus">False</property>
-            <property name="justify">center</property>
-            <attributes>
-              <attribute name="font-desc" value="Sans Italic 12"/>
-              <attribute name="foreground" value="#a5a51d1d2d2d"/>
-            </attributes>
-          </object>
-          <packing>
-            <property name="x">595</property>
-            <property name="y">76</property>
-          </packing>
-        </child>
-        <child>
-          <object class="GtkScrolledWindow" id="scrolled_window">
-            <property name="name">scrolled_window</property>
-=======
           <object class="GtkScrolledWindow" id="scrolled_layout">
             <property name="name">scrolled_layout</property>
->>>>>>> main
             <property name="width-request">900</property>
             <property name="height-request">471</property>
             <property name="visible">True</property>
             <property name="can-focus">True</property>
             <property name="shadow-type">in</property>
             <child>
-<<<<<<< HEAD
-              <object class="GtkViewport" id="table_container">
-                <property name="name">table_container</property>
-=======
               <object class="GtkViewport" id="dfa_table">
                 <property name="name">dfa_table</property>
->>>>>>> main
                 <property name="visible">True</property>
                 <property name="can-focus">False</property>
                 <child>
@@ -255,13 +182,8 @@
           </packing>
         </child>
         <child>
-<<<<<<< HEAD
-          <object class="GtkLabel" id="lbl_result">
-            <property name="name">lbl_result</property>
-=======
           <object class="GtkLabel" id="final_result">
             <property name="name">final_result</property>
->>>>>>> main
             <property name="width-request">173</property>
             <property name="height-request">31</property>
             <property name="visible">True</property>
@@ -328,11 +250,7 @@
             <property name="receives-default">True</property>
             <property name="image">image3</property>
             <property name="always-show-image">True</property>
-<<<<<<< HEAD
-            <signal name="clicked" handler="on_btn_end_clicked" swapped="no"/>
-=======
             <signal name="clicked" handler="end_clicked_event" swapped="no"/>
->>>>>>> main
           </object>
           <packing>
             <property name="x">1225</property>
@@ -340,15 +258,9 @@
           </packing>
         </child>
         <child>
-<<<<<<< HEAD
-          <object class="GtkButton" id="btn_eval_strip">
-            <property name="label" translatable="yes">Evaluate strip</property>
-            <property name="name">btn_eval_strip</property>
-=======
           <object class="GtkButton" id="btn_evaluate_strip">
             <property name="label" translatable="yes">Evaluate strip</property>
             <property name="name">btn_evaluate_strip</property>
->>>>>>> main
             <property name="width-request">100</property>
             <property name="height-request">33</property>
             <property name="visible">True</property>
@@ -356,11 +268,7 @@
             <property name="receives-default">True</property>
             <property name="image">image4</property>
             <property name="always-show-image">True</property>
-<<<<<<< HEAD
-            <signal name="clicked" handler="on_btn_eval_strip_clicked" swapped="no"/>
-=======
             <signal name="clicked" handler="eval_strip_clicked_event" swapped="no"/>
->>>>>>> main
           </object>
           <packing>
             <property name="x">543</property>
@@ -368,12 +276,8 @@
           </packing>
         </child>
         <child>
-<<<<<<< HEAD
-          <object class="GtkSpinButton" id="spin1">
-=======
           <object class="GtkSpinButton" id="sp_n_states">
             <property name="name">sp_n_states</property>
->>>>>>> main
             <property name="visible">True</property>
             <property name="can-focus">True</property>
             <property name="events">GDK_EXPOSURE_MASK | GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_ENTER_NOTIFY_MASK</property>
@@ -385,13 +289,8 @@
           </packing>
         </child>
         <child>
-<<<<<<< HEAD
-          <object class="GtkSpinButton">
-            <property name="name">txt_alphabet</property>
-=======
           <object class="GtkSpinButton" id="sp_m_alphabet">
             <property name="name">sp_m_alphabet</property>
->>>>>>> main
             <property name="visible">True</property>
             <property name="can-focus">True</property>
             <property name="adjustment">adjustment2</property>
