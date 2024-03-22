@@ -466,40 +466,43 @@ void execute_strip_evaluation(const char *strip2eval, char *alphabet_symbols, in
     gtk_text_view_set_wrap_mode(textView, GTK_WRAP_WORD_CHAR);
     // clear buffer
     gtk_text_buffer_set_text(textViewBuffer, "", -1);  
+    
+    // Starting state
+    char state_str[100];
+    snprintf(state_str, sizeof(state_str), "%s", state_names[0]);
+    gtk_text_buffer_insert_at_cursor(textViewBuffer, "Initial state: ", -1);
+    gtk_text_buffer_insert_at_cursor(textViewBuffer, state_str, -1);
+   
     if (dfa_history.transition_history != NULL){
         dfa_transitions *current_transition = dfa_history.transition_history; 
-        // Starting state
-        if (current_transition->next != NULL || current_transition->to != -1){
-            int state_to_print = current_transition ->from;
-    	    char state_str[3];
-    	    snprintf(state_str, sizeof(state_str), "%d", state_to_print);
-    	    gtk_text_buffer_insert_at_cursor(textViewBuffer, "Initial state: ", -1);
-    	    gtk_text_buffer_insert_at_cursor(textViewBuffer, state_str, -1);
-    	    // transitions
-    	    while (current_transition != NULL){
+        char char_to_print = current_transition->symbol;
+    	while (current_transition != NULL){
+	    // transition to -1
+	    if (current_transition->to == -1) {
+                gtk_text_buffer_insert_at_cursor(textViewBuffer, "\nThere were no further valid transitions", -1);
+	        break;
+	    } else {
     	        // print transition
     	        // symbol
 	        gtk_text_buffer_insert_at_cursor(textViewBuffer, "\nSymbol \"", -1);
-    	        state_to_print = current_transition->symbol;
-    	        snprintf(state_str, sizeof(state_str),"%c", state_to_print);
+    	        char_to_print = current_transition->symbol;
+    	        snprintf(state_str, sizeof(state_str),"%c", char_to_print);
     	        gtk_text_buffer_insert_at_cursor(textViewBuffer, state_str, -1);
     	        gtk_text_buffer_insert_at_cursor(textViewBuffer, "\" produces a transition from state: ", -1);
 	        // from
-    	        state_to_print = current_transition->from;
-    	        snprintf(state_str, sizeof(state_str),"%d", state_to_print);
+    	        snprintf(state_str, sizeof(state_str),"%s", state_names[current_transition->from]);
     	        gtk_text_buffer_insert_at_cursor(textViewBuffer, state_str, -1);
 	        // to
-    	        state_to_print = current_transition->to;
-    	        snprintf(state_str, sizeof(state_str),"%d", state_to_print);
+    	        snprintf(state_str, sizeof(state_str),"%s", state_names[current_transition->to]);
     	        gtk_text_buffer_insert_at_cursor(textViewBuffer, " to state: ", -1);
     	        gtk_text_buffer_insert_at_cursor(textViewBuffer, state_str, -1);
 	        // go to next transition in history
 	        current_transition = current_transition->next;
-            }
-        // no transitions
-        } else {
-             gtk_text_buffer_insert_at_cursor(textViewBuffer, "There were no transitions", -1);
+	    }
         }
+    // no transitions
+    } else {
+        gtk_text_buffer_insert_at_cursor(textViewBuffer, "\nThere were no transitions", -1);
     }
     
 
