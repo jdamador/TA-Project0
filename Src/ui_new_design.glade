@@ -184,7 +184,7 @@
         <child>
           <object class="GtkLabel" id="final_result">
             <property name="name">final_result</property>
-            <property name="width-request">173</property>
+            <property name="width-request">150</property>
             <property name="height-request">31</property>
             <property name="visible">True</property>
             <property name="can-focus">False</property>
@@ -195,7 +195,7 @@
             </attributes>
           </object>
           <packing>
-            <property name="x">1086</property>
+            <property name="x">1100</property>
             <property name="y">627</property>
           </packing>
         </child>

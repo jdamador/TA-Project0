@@ -136,6 +136,42 @@ void activation_handler(int option)
 }
 
 /*
+ * Clean testView Event: clear the text in the textView output result.
+ *
+ * Parameters:
+ *   void
+ *
+ * Output:
+ *   void.
+ */
+
+void clean_textView_object() {
+    // Print automaton transition history in GTK Text View.
+    GtkTextView *textView = GTK_TEXT_VIEW(gtk_builder_get_object(ui_builder, "textview"));
+    GtkTextBuffer *textViewBuffer = gtk_text_view_get_buffer(textView);
+
+    // wrap text around textView
+    gtk_text_view_set_wrap_mode(textView, GTK_WRAP_WORD_CHAR);
+
+    gtk_text_buffer_set_text(textViewBuffer, "", -1);
+}
+
+/*
+ * Clean testView Event: clear the text in the textView output result.
+ *
+ * Parameters:
+ *   void
+ *
+ * Output:
+ *   void.
+ */
+
+void clean_evaluate_strip_object() {
+    // Print automaton transition history in GTK Text View.
+    gtk_entry_set_text(GTK_ENTRY(evaluate_strip), "");
+}
+
+/*
  * End Clicked Event: handler the end event, just finish the program.
  *La Tortura
 
@@ -164,6 +200,10 @@ void settings_clicked_event(GtkButton *b)
     // Get n_states and m_alphabet_elements from spin buttons.
     n_states = (int)gtk_spin_button_get_value(GTK_SPIN_BUTTON(gtk_builder_get_object(ui_builder, "sp_n_states")));
     m_alphabet = (int)gtk_spin_button_get_value(GTK_SPIN_BUTTON(gtk_builder_get_object(ui_builder, "sp_m_alphabet")));
+
+    // clear buffer
+    clean_textView_object();
+    clean_evaluate_strip_object();
 
     // call generate_dfa_settings_table to create the table.
     generate_dfa_settings_table();
@@ -252,6 +292,10 @@ void evaluate_clicked_event(GtkButton *b)
         }
     }
 
+    // clear buffer
+    clean_textView_object();
+    clean_evaluate_strip_object();
+
     // Manage which elements must be disable.
     activation_handler(3);
 }
@@ -267,6 +311,9 @@ void evaluate_clicked_event(GtkButton *b)
  */
 void eval_strip_clicked_event(GtkButton *b)
 {
+    // clear buffer
+    clean_textView_object();
+
     const gchar *strip2eval = gtk_entry_get_text(GTK_ENTRY(evaluate_strip));
     execute_strip_evaluation(strip2eval, alphabet_symbols, transition_table, acceptance_states, state_names);
 }
@@ -308,6 +355,12 @@ void generate_dfa_settings_table()
 
     char current_symbol = 'a'; // This letter is to named the alphabet elements. We start with a-z and then A-Z.
 
+    // For each alphabet_symbol_entries element set a NULL value
+    for (int i = 0; i < m_alphabet; i++)
+    {
+        alphabet_symbol_entries[i] = NULL;
+    }
+
     // For each m_alphabet element we create a new entry.
     for (int i = 0; i < m_alphabet; i++)
     {
@@ -344,6 +397,7 @@ void generate_dfa_settings_table()
         // Add new entry to type a custom state name.
         GtkWidget *custom_name = gtk_entry_new();
         gtk_entry_set_placeholder_text(GTK_ENTRY(custom_name), "custom name");
+        gtk_entry_set_max_length(GTK_ENTRY(custom_name), 20);                                       // Max length = 20.
         g_signal_connect(custom_name, "changed", G_CALLBACK(custom_name_changed_event), NULL);
         gtk_grid_attach(GTK_GRID(grid_layout), custom_name, 2, i, 1, 1);
         state_names_entries[i - 1] = custom_name;
@@ -394,6 +448,21 @@ void generate_dfa_settings_table()
 void custom_name_changed_event(GtkEntry *entry, gpointer typed_data)
 {
     // TODO: validations on state names entries should be here.
+    const gchar *text = gtk_entry_get_text(entry);
+
+    if (g_utf8_strlen(text, -1) > 20) {
+        GtkWidget *dialog = gtk_message_dialog_new(GTK_WINDOW(typed_data),
+                                    GTK_DIALOG_MODAL | GTK_DIALOG_DESTROY_WITH_PARENT,
+                                    GTK_MESSAGE_ERROR,
+                                    GTK_BUTTONS_OK,
+                                    "The state name cannot be longer than 20 characters!");
+        gtk_dialog_run(GTK_DIALOG(dialog));
+        gtk_widget_destroy(dialog);
+
+        gtk_widget_set_sensitive(evaluate_button, 0);
+    } else {
+        gtk_widget_set_sensitive(evaluate_button, 1);
+    }
 }
 
 /*
@@ -410,21 +479,61 @@ void alphabet_symbol_changed_event(GtkEntry *entry, gpointer typed_data)
     // TODO: validations on alphabet symbols entries should be here.
 
     // In this way you can get the text to validate if it meets the requirements.
-    // const gchar *text = gtk_entry_get_text(entry);
 
-    // And in this way you can set the text in the entry
-    // gtk_entry_set_text(entry, "-");
+    // And in this way you can set the text in the entry 
+
+     // TODO: validations on state names entries should be here.
+    const gchar *input_text = gtk_entry_get_text(entry);
+    gchar *trimmed_text = g_strstrip(g_strdup(input_text));
+    gint length = g_utf8_strlen(trimmed_text, -1);
+    g_free(trimmed_text);
+
+    if (length == 0) {
+        GtkWidget *dialog = gtk_message_dialog_new(GTK_WINDOW(typed_data),
+                                    GTK_DIALOG_MODAL | GTK_DIALOG_DESTROY_WITH_PARENT,
+                                    GTK_MESSAGE_WARNING,
+                                    GTK_BUTTONS_OK,
+                                    "The alphabet value cannot be an empty character!");
+        gtk_dialog_run(GTK_DIALOG(dialog));
+        gtk_widget_destroy(dialog);
+
+        gtk_widget_set_sensitive(evaluate_button, 0);
+    } else {
+        gtk_widget_set_sensitive(evaluate_button, 1);
+    }
+
+    int counter = 0;
+
+    for (int i = 0; i < m_alphabet; i++) {
+        const gchar *text = gtk_entry_get_text(GTK_ENTRY(alphabet_symbol_entries[i]));
+        if (text != NULL && strcmp(text, input_text) == 0) {
+            counter++;
+        }
+    }
+
+    if(counter > 1) {
+        GtkWidget *dialog = gtk_message_dialog_new(GTK_WINDOW(typed_data),
+                                    GTK_DIALOG_MODAL | GTK_DIALOG_DESTROY_WITH_PARENT,
+                                    GTK_MESSAGE_WARNING,
+                                    GTK_BUTTONS_OK,
+                                    "The alphabet value needs to be unique!");
+        gtk_dialog_run(GTK_DIALOG(dialog));
+        gtk_widget_destroy(dialog);
+
+        gtk_widget_set_sensitive(evaluate_button, 0);
+    } else {
+        gtk_widget_set_sensitive(evaluate_button, 1);
+    }
 }
 
 /*
  * Transition Changed Event: this method is added to every transition entry, so when it change, sent a event.
  *
  * Parameters:
- *   strip2eval: the strip which will be evaluated.
  *   alphabet_symbols: all the alphabet symbols (uniques).
  *   transition_table: the table with the transitions between states.
  *   acceptance_states: the list of acceptance states.
- *   state_names:   the list of new states names, they are empties if nothing is typed by the user.
+ *   state_names: the list of new states names, they are empties if nothing is typed by the user.
  *   typed_data: the data typed in the entry.
  * Output:
  *   void.
@@ -432,6 +541,17 @@ void alphabet_symbol_changed_event(GtkEntry *entry, gpointer typed_data)
 void transition_changed_event(GtkEntry *entry, gpointer typed_data)
 {
     // TODO: validations on in transitions states entries should be here.
+
+    printf("names:\n");
+    for (int i = 0; i < m_alphabet; i++) {
+        const gchar *text = gtk_entry_get_text(GTK_ENTRY(alphabet_symbol_entries[i]));
+        printf("%s ", text);
+        printf("\n");
+    }
+
+        /* for (int j = 0; j < m_alphabet; j++) {
+            printf("%d ", transition_table[i][j]);
+        } */
 }
 
 void execute_strip_evaluation(const char *strip2eval, char *alphabet_symbols, int **transition_table, int *acceptance_states, char **state_names)
@@ -462,10 +582,10 @@ void execute_strip_evaluation(const char *strip2eval, char *alphabet_symbols, in
     // Print automaton transition history in GTK Text View.
     GtkTextView *textView = GTK_TEXT_VIEW(gtk_builder_get_object(ui_builder, "textview"));
     GtkTextBuffer *textViewBuffer = gtk_text_view_get_buffer(textView);
+
     // wrap text around textView
     gtk_text_view_set_wrap_mode(textView, GTK_WRAP_WORD_CHAR);
-    // clear buffer
-    gtk_text_buffer_set_text(textViewBuffer, "", -1);  
+
     if (dfa_history.transition_history != NULL){
         dfa_transitions *current_transition = dfa_history.transition_history; 
         // Starting state
