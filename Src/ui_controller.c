@@ -459,9 +459,52 @@ void execute_strip_evaluation(const char *strip2eval, char *alphabet_symbols, in
         gtk_label_set_text(GTK_LABEL(GTK_WIDGET(gtk_builder_get_object(ui_builder, "final_result"))), (const gchar *)"Rejected");
     }
     
-    // TODO: here should be located the buffer to print the transition states to solve the automaton.
-
-
+    // Print automaton transition history in GTK Text View.
+    GtkTextView *textView = GTK_TEXT_VIEW(gtk_builder_get_object(ui_builder, "textview"));
+    GtkTextBuffer *textViewBuffer = gtk_text_view_get_buffer(textView);
+    // wrap text around textView
+    gtk_text_view_set_wrap_mode(textView, GTK_WRAP_WORD_CHAR);
+    // clear buffer
+    gtk_text_buffer_set_text(textViewBuffer, "", -1);  
+    
+    // Starting state
+    char state_str[100];
+    snprintf(state_str, sizeof(state_str), "%s", state_names[0]);
+    gtk_text_buffer_insert_at_cursor(textViewBuffer, "Initial state: ", -1);
+    gtk_text_buffer_insert_at_cursor(textViewBuffer, state_str, -1);
+   
+    if (dfa_history.transition_history != NULL){
+        dfa_transitions *current_transition = dfa_history.transition_history; 
+        char char_to_print = current_transition->symbol;
+    	while (current_transition != NULL){
+	    // transition to -1
+	    if (current_transition->to == -1) {
+                gtk_text_buffer_insert_at_cursor(textViewBuffer, "\nThere were no further valid transitions", -1);
+	        break;
+	    } else {
+    	        // print transition
+    	        // symbol
+	        gtk_text_buffer_insert_at_cursor(textViewBuffer, "\nSymbol \"", -1);
+    	        char_to_print = current_transition->symbol;
+    	        snprintf(state_str, sizeof(state_str),"%c", char_to_print);
+    	        gtk_text_buffer_insert_at_cursor(textViewBuffer, state_str, -1);
+    	        gtk_text_buffer_insert_at_cursor(textViewBuffer, "\" produces a transition from state: ", -1);
+	        // from
+    	        snprintf(state_str, sizeof(state_str),"%s", state_names[current_transition->from]);
+    	        gtk_text_buffer_insert_at_cursor(textViewBuffer, state_str, -1);
+	        // to
+    	        snprintf(state_str, sizeof(state_str),"%s", state_names[current_transition->to]);
+    	        gtk_text_buffer_insert_at_cursor(textViewBuffer, " to state: ", -1);
+    	        gtk_text_buffer_insert_at_cursor(textViewBuffer, state_str, -1);
+	        // go to next transition in history
+	        current_transition = current_transition->next;
+	    }
+        }
+    // no transitions
+    } else {
+        gtk_text_buffer_insert_at_cursor(textViewBuffer, "\nThere were no transitions", -1);
+    }
+    
 
     // Free memory to avoid segmentation fault.
     for (size_t i = 0; i < n_states; i++)
