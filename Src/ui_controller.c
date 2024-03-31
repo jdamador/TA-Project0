@@ -63,12 +63,13 @@ void transition_changed_event(GtkEntry *entry, gpointer typed_data);
 void clear_memory();
 void execute_strip_evaluation(const char *strip2eval, char *alphabet_symbols, int **transition_table, int *acceptance_states, char **state_names);
 void fix_ui_transition_table(int ***fixed_table, int **original_table, int n_states, int m_alphabet);
+gboolean isNumeric(const gchar *text);
 void clean_textView_object();
 void clean_evaluate_strip_object();
 void enable_evalute_button();
 
 /*
- * Display_UI: handler to start all the screen elements to be displayed.
+ * display_ui: handler to start all the screen elements to be displayed.
  *
  * Parameters:
  *   argc, argv: the arguments set by terminal input when the program is executed.
@@ -102,6 +103,7 @@ int display_ui(int argc, char *argv[])
 
     // Deactivate the buttons as initial state.
     activation_handler(1);
+
     // Display the new screen.
     gtk_widget_show_all(window);
     gtk_main();
@@ -109,7 +111,7 @@ int display_ui(int argc, char *argv[])
 }
 
 /*
- * Activation Handler: this method is in charge of manage which elements will be enable or disable.
+ * activation_handler: this method is in charge of manage which elements will be enable or disable.
  *
  * Parameters:
  *   option: which situation is currently happening.
@@ -308,7 +310,7 @@ void evaluate_clicked_event(GtkButton *b)
 }
 
 /*
- * Eval Strip Clicked Event: handler of events when the button to eval a strip is clicked.
+ * eval_strip_clicked_event: handler of events when the button to eval a strip is clicked.
  *
  * Parameters:
  *   GtkButton: the event generated when the button is clicked.
@@ -326,10 +328,10 @@ void eval_strip_clicked_event(GtkButton *b)
 }
 
 /*
- * Generate DFA Settings Table: Generate the table with allow to configure the DFA.
+ * generate_dfa_settings_table: Generate the table with allow to configure the DFA.
  *
  * Parameters:
- *   void
+ *   void.
  *
  * Output:
  *   void.
@@ -443,6 +445,8 @@ void generate_dfa_settings_table()
     gtk_widget_show_all(window);
 }
 
+
+
 /*
  * Custom Name Changed Event: this method is added to every custom_name entry, so when it change, sent a event.
  *
@@ -499,6 +503,7 @@ void custom_name_changed_event(GtkEntry *entry, gpointer typed_data)
 
 /*
  * Alphabet Symbol Changed Event: this method is added to every alphabet_symbol entry, so when it change, sent a event.
+ * execute_strip_evaluation: handle to start the strip evaluation over the input text.
  *
  * Parameters:
  *   entry: the entry who generated the event.
@@ -620,7 +625,7 @@ void execute_strip_evaluation(const char *strip2eval, char *alphabet_symbols, in
         gtk_widget_override_background_color(GTK_WIDGET(gtk_builder_get_object(ui_builder, "final_result")), GTK_STATE_NORMAL, &new_color);
         gtk_label_set_text(GTK_LABEL(GTK_WIDGET(gtk_builder_get_object(ui_builder, "final_result"))), (const gchar *)"Rejected");
     }
-    
+
     // Print automaton transition history in GTK Text View.
     GtkTextView *textView = GTK_TEXT_VIEW(gtk_builder_get_object(ui_builder, "textview"));
     GtkTextBuffer *textViewBuffer = gtk_text_view_get_buffer(textView);
@@ -628,47 +633,57 @@ void execute_strip_evaluation(const char *strip2eval, char *alphabet_symbols, in
     // wrap text around textView
     gtk_text_view_set_wrap_mode(textView, GTK_WRAP_WORD_CHAR);
     // clear buffer
-    gtk_text_buffer_set_text(textViewBuffer, "", -1);  
-    
+    gtk_text_buffer_set_text(textViewBuffer, "", -1);
+
     // Starting state
     char state_str[100];
     snprintf(state_str, sizeof(state_str), "%s", state_names[0]);
     gtk_text_buffer_insert_at_cursor(textViewBuffer, "Initial state: ", -1);
 
     gtk_text_buffer_insert_at_cursor(textViewBuffer, state_str, -1);
-   
-    if (dfa_history.transition_history != NULL){
-        dfa_transitions *current_transition = dfa_history.transition_history; 
+
+    if (dfa_history.transition_history != NULL)
+    {
+        dfa_transitions *current_transition = dfa_history.transition_history;
         char char_to_print = current_transition->symbol;
-    	while (current_transition != NULL){
-	    // transition to -1
-	    if (current_transition->to == -1) {
+        while (current_transition != NULL)
+        {
+            // transition to -1
+            if (current_transition->to == -1)
+            {
+                gtk_text_buffer_insert_at_cursor(textViewBuffer, "\nSymbol ", -1);
+                char_to_print = current_transition->symbol;
+                snprintf(state_str, sizeof(state_str), "%c", char_to_print);
+                gtk_text_buffer_insert_at_cursor(textViewBuffer, state_str, -1);
                 gtk_text_buffer_insert_at_cursor(textViewBuffer, "\nThere were no further valid transitions", -1);
-	        break;
-	    } else {
-    	        // print transition
-    	        // symbol
-	        gtk_text_buffer_insert_at_cursor(textViewBuffer, "\nSymbol \"", -1);
-    	        char_to_print = current_transition->symbol;
-    	        snprintf(state_str, sizeof(state_str),"%c", char_to_print);
-    	        gtk_text_buffer_insert_at_cursor(textViewBuffer, state_str, -1);
-    	        gtk_text_buffer_insert_at_cursor(textViewBuffer, "\" produces a transition from state: ", -1);
-	        // from
-    	        snprintf(state_str, sizeof(state_str),"%s", state_names[current_transition->from]);
-    	        gtk_text_buffer_insert_at_cursor(textViewBuffer, state_str, -1);
-	        // to
-    	        snprintf(state_str, sizeof(state_str),"%s", state_names[current_transition->to]);
-    	        gtk_text_buffer_insert_at_cursor(textViewBuffer, " to state: ", -1);
-    	        gtk_text_buffer_insert_at_cursor(textViewBuffer, state_str, -1);
-	        // go to next transition in history
-	        current_transition = current_transition->next;
-	    }
+                break;
+            }
+            else
+            {
+                // print transition
+                // symbol
+                gtk_text_buffer_insert_at_cursor(textViewBuffer, "\nSymbol \"", -1);
+                char_to_print = current_transition->symbol;
+                snprintf(state_str, sizeof(state_str), "%c", char_to_print);
+                gtk_text_buffer_insert_at_cursor(textViewBuffer, state_str, -1);
+                gtk_text_buffer_insert_at_cursor(textViewBuffer, "\" produces a transition from state: ", -1);
+                // from
+                snprintf(state_str, sizeof(state_str), "%s", state_names[current_transition->from]);
+                gtk_text_buffer_insert_at_cursor(textViewBuffer, state_str, -1);
+                // to
+                snprintf(state_str, sizeof(state_str), "%s", state_names[current_transition->to]);
+                gtk_text_buffer_insert_at_cursor(textViewBuffer, " to state: ", -1);
+                gtk_text_buffer_insert_at_cursor(textViewBuffer, state_str, -1);
+                // go to next transition in history
+                current_transition = current_transition->next;
+            }
         }
-    // no transitions
-    } else {
+        // no transitions
+    }
+    else
+    {
         gtk_text_buffer_insert_at_cursor(textViewBuffer, "\nThere were no transitions", -1);
     }
-    
 
     // Free memory to avoid segmentation fault.
     for (size_t i = 0; i < n_states; i++)
@@ -678,9 +693,8 @@ void execute_strip_evaluation(const char *strip2eval, char *alphabet_symbols, in
     free(fixed_transition_table);
 }
 
-
 /*
- * Fix UI Transition Table: this method is in charge of fix the positions relative from screen layout to the logic matrix.
+ * fix_ui_transition_table: this method is in charge of fix the positions relative from screen layout to the logic matrix.
  *
  * Parameters:
  *   fixed_table: is a pointer that storage the fixed table.
@@ -712,4 +726,149 @@ void fix_ui_transition_table(int ***fixed_table, int **original_table, int n_sta
             }
         }
     }
+}
+
+/*
+ * custom_name_changed_event: this method is added to every custom_name entry, so when it change, sent a event.
+ *
+ * Parameters:
+ *   entry: the entry who generated the event.
+ *   typed_data: the data typed in the entry.
+ * Output:
+ *   void.
+ */
+void custom_name_changed_event(GtkEntry *entry, gpointer typed_data)
+{
+    const gchar *input_text = gtk_entry_get_text(GTK_ENTRY(entry));
+    if (strlen(input_text) > 20)
+    {
+        gchar *cutted_input_text = g_strndup(input_text, 20);
+        gtk_entry_set_text(entry, cutted_input_text);
+        g_free(cutted_input_text);
+    }
+}
+
+/*
+ * alphabet_symbol_changed_event: this method is added to every alphabet_symbol entry, so when it change, sent a event.
+ *
+ * Parameters:
+ *   entry: the entry who generated the event.
+ *   typed_data: the data typed in the entry.
+ * Output:
+ *   void.
+ */
+void alphabet_symbol_changed_event(GtkEntry *entry, gpointer typed_data)
+{
+    const gchar *text = gtk_entry_get_text(entry);
+
+    for (int j = 0; j < m_alphabet; j++)
+    {
+        // Get the text from the GtkEntry widget
+        const char *other_text = gtk_entry_get_text(GTK_ENTRY(alphabet_symbol_entries[j]));
+        if (text[0] == other_text[0] && GTK_ENTRY(alphabet_symbol_entries[j]) != entry)
+        {
+            gtk_entry_set_text(entry, "");
+        }
+    }
+
+    // Check if the entered text is more than one character long
+    if (strlen(text) > 1)
+    {
+        // Remove extra characters, keeping only the first character
+        gchar first_char[2];
+        first_char[0] = text[0];
+        first_char[1] = '\0';
+
+        gtk_entry_set_text(entry, first_char);
+    }
+}
+
+
+/*
+ * custom_name_changed_event: this method is added to every transition entry, so when it change, sent a event.
+ *
+ * Parameters:
+ *   entry: the entry who generated the event.
+ *   typed_data: the data typed in the entry.
+ * Output:
+ *   void.
+ */
+void transition_changed_event(GtkEntry *entry, gpointer typed_data)
+{
+    const gchar *input_text = gtk_entry_get_text(entry);
+    if (!isNumeric(input_text))
+    {
+        gtk_entry_set_text(entry, "-");
+    }
+
+    if (strlen(input_text) > 4)
+    {
+        gtk_entry_set_text(entry, "-");
+    }
+
+    // glong int_value = g_ascii_strtoll(input_text, NULL, 10);
+    // if(int_value < 0 ){
+    //     gtk_entry_set_text(entry, "-");
+    // }
+
+    if (strlen(input_text) == 0)
+    {
+        gtk_entry_set_text(entry, "-");
+    }
+}
+
+/*
+ * custom_name_changed_event: check if an input text is numeric.
+ *
+ * Parameters:
+ *   text: text to check if is numeric
+ * 
+ * Output:
+ *   gboolean: True or False.
+ */
+gboolean isNumeric(const gchar *text)
+{
+    gboolean valid = TRUE;
+    for (int i = 0; text[i] != '\0'; i++)
+    {
+        if (!g_ascii_isdigit(text[i]) && text[i] != '-' && text[i] != '.')
+        {
+            valid = FALSE;
+            break;
+        }
+    }
+    return valid;
+}
+
+/*
+ * end_clicked_event: handler the end event, just finish the program.
+ *
+ *  * Parameters:
+ *   GtkButton: the event generated when the button is clicked.
+ *
+ * Output:
+ *   void.
+ */
+void end_clicked_event(GtkButton *b)
+{
+    exit(1);
+}
+
+/*
+ * settings_clicked_event: handler of events when the button to SET the settings is clicked.
+ *
+ * Parameters:
+ *   GtkButton: the event generated when the button is clicked.
+ *
+ * Output:
+ *   void.
+ */
+void settings_clicked_event(GtkButton *b)
+{
+    // Get n_states and m_alphabet_elements from spin buttons.
+    n_states = (int)gtk_spin_button_get_value(GTK_SPIN_BUTTON(gtk_builder_get_object(ui_builder, "sp_n_states")));
+    m_alphabet = (int)gtk_spin_button_get_value(GTK_SPIN_BUTTON(gtk_builder_get_object(ui_builder, "sp_m_alphabet")));
+
+    // call generate_dfa_settings_table to create the table.
+    generate_dfa_settings_table();
 }
