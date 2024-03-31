@@ -34,7 +34,6 @@ gint m_alphabet;
 
 // Validation variables
 int alphabet_error = 0;
-int states_name_error = 0;
 
 // gchar alphabet[1024];
 
@@ -445,156 +444,8 @@ void generate_dfa_settings_table()
     gtk_widget_show_all(window);
 }
 
-
-
-/*
- * Custom Name Changed Event: this method is added to every custom_name entry, so when it change, sent a event.
- *
- * Parameters:
- *   entry: the entry who generated the event.
- *   typed_data: the data typed in the entry.
- * Output:
- *   void.
- */
-void custom_name_changed_event(GtkEntry *entry, gpointer typed_data)
-{
-    // TODO: validations on state names entries should be here.
-    const gchar *input_text = gtk_entry_get_text(entry);
-
-    if (g_utf8_strlen(input_text, -1) > 20) {
-        GtkWidget *dialog = gtk_message_dialog_new(GTK_WINDOW(typed_data),
-                                    GTK_DIALOG_MODAL | GTK_DIALOG_DESTROY_WITH_PARENT,
-                                    GTK_MESSAGE_ERROR,
-                                    GTK_BUTTONS_OK,
-                                    "The state name cannot be longer than 20 characters!");
-        gtk_dialog_run(GTK_DIALOG(dialog));
-        gtk_widget_destroy(dialog);
-
-        states_name_error = 1;
-    } else {
-        states_name_error = 0;
-
-        int counter = 0;
-
-        for (int i = 0; i < n_states; i++) {
-            const gchar *text = gtk_entry_get_text(GTK_ENTRY(state_names_entries[i]));
-            if (text != NULL && strcmp(text, input_text) == 0) {
-                counter++;
-            }
-        }
-
-        if(counter > 1) {
-            GtkWidget *dialog = gtk_message_dialog_new(GTK_WINDOW(typed_data),
-                                        GTK_DIALOG_MODAL | GTK_DIALOG_DESTROY_WITH_PARENT,
-                                        GTK_MESSAGE_WARNING,
-                                        GTK_BUTTONS_OK,
-                                        "The custom name has already been used, please use another one!");
-            gtk_dialog_run(GTK_DIALOG(dialog));
-            gtk_widget_destroy(dialog);
-
-            states_name_error = 1;
-        } else {
-            states_name_error = 0;
-        }
-    }
-
-    enable_evalute_button();
-}
-
-/*
- * Alphabet Symbol Changed Event: this method is added to every alphabet_symbol entry, so when it change, sent a event.
- * execute_strip_evaluation: handle to start the strip evaluation over the input text.
- *
- * Parameters:
- *   entry: the entry who generated the event.
- *   typed_data: the data typed in the entry.
- * Output:
- *   void.
- */
-void alphabet_symbol_changed_event(GtkEntry *entry, gpointer typed_data)
-{
-    // TODO: validations on alphabet symbols entries should be here.
-
-    // In this way you can get the text to validate if it meets the requirements.
-
-    // And in this way you can set the text in the entry 
-
-     // TODO: validations on state names entries should be here.
-    const gchar *input_text = gtk_entry_get_text(entry);
-    gchar *trimmed_text = g_strstrip(g_strdup(input_text));
-    gint length = g_utf8_strlen(trimmed_text, -1);
-    g_free(trimmed_text);
-
-    if (length == 0) {
-        GtkWidget *dialog = gtk_message_dialog_new(GTK_WINDOW(typed_data),
-                                    GTK_DIALOG_MODAL | GTK_DIALOG_DESTROY_WITH_PARENT,
-                                    GTK_MESSAGE_WARNING,
-                                    GTK_BUTTONS_OK,
-                                    "The alphabet value cannot be an empty character!");
-        gtk_dialog_run(GTK_DIALOG(dialog));
-        gtk_widget_destroy(dialog);
-
-        alphabet_error = 1;
-    } else {
-        alphabet_error = 0;
-
-        int counter = 0;
-
-        for (int i = 0; i < m_alphabet; i++) {
-            const gchar *text = gtk_entry_get_text(GTK_ENTRY(alphabet_symbol_entries[i]));
-            if (text != NULL && strcmp(text, input_text) == 0) {
-                counter++;
-            }
-        }
-
-        if(counter > 1) {
-            GtkWidget *dialog = gtk_message_dialog_new(GTK_WINDOW(typed_data),
-                                        GTK_DIALOG_MODAL | GTK_DIALOG_DESTROY_WITH_PARENT,
-                                        GTK_MESSAGE_WARNING,
-                                        GTK_BUTTONS_OK,
-                                        "The alphabet value needs to be unique!");
-            gtk_dialog_run(GTK_DIALOG(dialog));
-            gtk_widget_destroy(dialog);
-
-            alphabet_error = 1;
-        } else {
-            alphabet_error = 0;
-        }
-    }
-    enable_evalute_button();
-}
-
-/*
- * Transition Changed Event: this method is added to every transition entry, so when it change, sent a event.
- *
- * Parameters:
- *   alphabet_symbols: all the alphabet symbols (uniques).
- *   transition_table: the table with the transitions between states.
- *   acceptance_states: the list of acceptance states.
- *   state_names: the list of new states names, they are empties if nothing is typed by the user.
- *   typed_data: the data typed in the entry.
- * Output:
- *   void.
- */
-void transition_changed_event(GtkEntry *entry, gpointer typed_data)
-{
-    // TODO: validations on in transitions states entries should be here.
-
-    printf("names:\n");
-    for (int i = 0; i < m_alphabet; i++) {
-        const gchar *text = gtk_entry_get_text(GTK_ENTRY(alphabet_symbol_entries[i]));
-        printf("%s ", text);
-        printf("\n");
-    }
-
-        /* for (int j = 0; j < m_alphabet; j++) {
-            printf("%d ", transition_table[i][j]);
-        } */ 
-}
-
 void enable_evalute_button() {
-    int disabled = alphabet_error || states_name_error;
-    if (disabled) {
+    if (alphabet_error) {
         gtk_widget_set_sensitive(evaluate_button, 0);
     } else {
         gtk_widget_set_sensitive(evaluate_button, 1);
@@ -781,11 +632,36 @@ void alphabet_symbol_changed_event(GtkEntry *entry, gpointer typed_data)
 
         gtk_entry_set_text(entry, first_char);
     }
+
+    int counter = 0;
+
+    for (int i = 0; i < m_alphabet; i++) {
+        const gchar *text = gtk_entry_get_text(GTK_ENTRY(alphabet_symbol_entries[i]));
+        if (text != NULL && strcmp(text, input_text) == 0) {
+            counter++;
+        }
+    }
+
+    if(counter > 1) {
+        GtkWidget *dialog = gtk_message_dialog_new(GTK_WINDOW(typed_data),
+                                    GTK_DIALOG_MODAL | GTK_DIALOG_DESTROY_WITH_PARENT,
+                                    GTK_MESSAGE_WARNING,
+                                    GTK_BUTTONS_OK,
+                                    "The alphabet value needs to be unique!");
+        gtk_dialog_run(GTK_DIALOG(dialog));
+        gtk_widget_destroy(dialog);
+
+        alphabet_error = 1;
+    } else {
+        alphabet_error = 0;
+    }
+
+    enable_evalute_button();
 }
 
 
 /*
- * custom_name_changed_event: this method is added to every transition entry, so when it change, sent a event.
+ * transition_changed_event: this method is added to every transition entry, so when it change, sent a event.
  *
  * Parameters:
  *   entry: the entry who generated the event.
@@ -805,11 +681,6 @@ void transition_changed_event(GtkEntry *entry, gpointer typed_data)
     {
         gtk_entry_set_text(entry, "-");
     }
-
-    // glong int_value = g_ascii_strtoll(input_text, NULL, 10);
-    // if(int_value < 0 ){
-    //     gtk_entry_set_text(entry, "-");
-    // }
 
     if (strlen(input_text) == 0)
     {
@@ -838,37 +709,4 @@ gboolean isNumeric(const gchar *text)
         }
     }
     return valid;
-}
-
-/*
- * end_clicked_event: handler the end event, just finish the program.
- *
- *  * Parameters:
- *   GtkButton: the event generated when the button is clicked.
- *
- * Output:
- *   void.
- */
-void end_clicked_event(GtkButton *b)
-{
-    exit(1);
-}
-
-/*
- * settings_clicked_event: handler of events when the button to SET the settings is clicked.
- *
- * Parameters:
- *   GtkButton: the event generated when the button is clicked.
- *
- * Output:
- *   void.
- */
-void settings_clicked_event(GtkButton *b)
-{
-    // Get n_states and m_alphabet_elements from spin buttons.
-    n_states = (int)gtk_spin_button_get_value(GTK_SPIN_BUTTON(gtk_builder_get_object(ui_builder, "sp_n_states")));
-    m_alphabet = (int)gtk_spin_button_get_value(GTK_SPIN_BUTTON(gtk_builder_get_object(ui_builder, "sp_m_alphabet")));
-
-    // call generate_dfa_settings_table to create the table.
-    generate_dfa_settings_table();
 }
