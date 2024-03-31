@@ -350,12 +350,6 @@ void generate_dfa_settings_table()
     alphabet_symbol_entries = (GtkWidget **)malloc(m_alphabet * sizeof(GtkWidget *));
     acceptance_checkboxes = (GtkWidget **)malloc(n_states * sizeof(GtkWidget *));
 
-    // For each state, we need to create m_alphabet columns. So we allocate memory for that.
-    for (int i = 0; i < n_states; i++)
-    {
-        transition_entries[i] = (GtkWidget **)malloc(m_alphabet * sizeof(GtkWidget *));
-    }
-
     // Create a new grid layout to set all new elements in the UI.
     grid_layout = gtk_grid_new();
     gtk_grid_set_row_spacing(GTK_GRID(grid_layout), 5);
