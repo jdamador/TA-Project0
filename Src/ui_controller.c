@@ -32,6 +32,10 @@ GtkWidget *evaluate_strip;
 gint n_states;
 gint m_alphabet;
 
+// Validation variables
+int alphabet_error = 0;
+int states_name_error = 0;
+
 // gchar alphabet[1024];
 
 // DFA visual table arrays;
@@ -59,6 +63,9 @@ void transition_changed_event(GtkEntry *entry, gpointer typed_data);
 void clear_memory();
 void execute_strip_evaluation(const char *strip2eval, char *alphabet_symbols, int **transition_table, int *acceptance_states, char **state_names);
 void fix_ui_transition_table(int ***fixed_table, int **original_table, int n_states, int m_alphabet);
+void clean_textView_object();
+void clean_evaluate_strip_object();
+void enable_evalute_button();
 
 /*
  * Display_UI: handler to start all the screen elements to be displayed.
@@ -459,10 +466,35 @@ void custom_name_changed_event(GtkEntry *entry, gpointer typed_data)
         gtk_dialog_run(GTK_DIALOG(dialog));
         gtk_widget_destroy(dialog);
 
-        gtk_widget_set_sensitive(evaluate_button, 0);
+        states_name_error = 1;
     } else {
-        gtk_widget_set_sensitive(evaluate_button, 1);
+        states_name_error = 0;
+
+        int counter = 0;
+
+        for (int i = 0; i < n_states; i++) {
+            const gchar *text = gtk_entry_get_text(GTK_ENTRY(state_names_entries[i]));
+            if (text != NULL && strcmp(text, input_text) == 0) {
+                counter++;
+            }
+        }
+
+        if(counter > 1) {
+            GtkWidget *dialog = gtk_message_dialog_new(GTK_WINDOW(typed_data),
+                                        GTK_DIALOG_MODAL | GTK_DIALOG_DESTROY_WITH_PARENT,
+                                        GTK_MESSAGE_WARNING,
+                                        GTK_BUTTONS_OK,
+                                        "The custom name has already been used, please use another one!");
+            gtk_dialog_run(GTK_DIALOG(dialog));
+            gtk_widget_destroy(dialog);
+
+            states_name_error = 1;
+        } else {
+            states_name_error = 0;
+        }
     }
+
+    enable_evalute_button();
 }
 
 /*
@@ -497,33 +529,34 @@ void alphabet_symbol_changed_event(GtkEntry *entry, gpointer typed_data)
         gtk_dialog_run(GTK_DIALOG(dialog));
         gtk_widget_destroy(dialog);
 
-        gtk_widget_set_sensitive(evaluate_button, 0);
+        alphabet_error = 1;
     } else {
-        gtk_widget_set_sensitive(evaluate_button, 1);
-    }
+        alphabet_error = 0;
 
-    int counter = 0;
+        int counter = 0;
 
-    for (int i = 0; i < m_alphabet; i++) {
-        const gchar *text = gtk_entry_get_text(GTK_ENTRY(alphabet_symbol_entries[i]));
-        if (text != NULL && strcmp(text, input_text) == 0) {
-            counter++;
+        for (int i = 0; i < m_alphabet; i++) {
+            const gchar *text = gtk_entry_get_text(GTK_ENTRY(alphabet_symbol_entries[i]));
+            if (text != NULL && strcmp(text, input_text) == 0) {
+                counter++;
+            }
+        }
+
+        if(counter > 1) {
+            GtkWidget *dialog = gtk_message_dialog_new(GTK_WINDOW(typed_data),
+                                        GTK_DIALOG_MODAL | GTK_DIALOG_DESTROY_WITH_PARENT,
+                                        GTK_MESSAGE_WARNING,
+                                        GTK_BUTTONS_OK,
+                                        "The alphabet value needs to be unique!");
+            gtk_dialog_run(GTK_DIALOG(dialog));
+            gtk_widget_destroy(dialog);
+
+            alphabet_error = 1;
+        } else {
+            alphabet_error = 0;
         }
     }
-
-    if(counter > 1) {
-        GtkWidget *dialog = gtk_message_dialog_new(GTK_WINDOW(typed_data),
-                                    GTK_DIALOG_MODAL | GTK_DIALOG_DESTROY_WITH_PARENT,
-                                    GTK_MESSAGE_WARNING,
-                                    GTK_BUTTONS_OK,
-                                    "The alphabet value needs to be unique!");
-        gtk_dialog_run(GTK_DIALOG(dialog));
-        gtk_widget_destroy(dialog);
-
-        gtk_widget_set_sensitive(evaluate_button, 0);
-    } else {
-        gtk_widget_set_sensitive(evaluate_button, 1);
-    }
+    enable_evalute_button();
 }
 
 /*
@@ -551,7 +584,16 @@ void transition_changed_event(GtkEntry *entry, gpointer typed_data)
 
         /* for (int j = 0; j < m_alphabet; j++) {
             printf("%d ", transition_table[i][j]);
-        } */
+        } */ 
+}
+
+void enable_evalute_button() {
+    int disabled = alphabet_error || states_name_error;
+    if (disabled) {
+        gtk_widget_set_sensitive(evaluate_button, 0);
+    } else {
+        gtk_widget_set_sensitive(evaluate_button, 1);
+    }
 }
 
 void execute_strip_evaluation(const char *strip2eval, char *alphabet_symbols, int **transition_table, int *acceptance_states, char **state_names)
@@ -592,6 +634,7 @@ void execute_strip_evaluation(const char *strip2eval, char *alphabet_symbols, in
     char state_str[100];
     snprintf(state_str, sizeof(state_str), "%s", state_names[0]);
     gtk_text_buffer_insert_at_cursor(textViewBuffer, "Initial state: ", -1);
+
     gtk_text_buffer_insert_at_cursor(textViewBuffer, state_str, -1);
    
     if (dfa_history.transition_history != NULL){
