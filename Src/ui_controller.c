@@ -459,9 +459,9 @@ void generate_dfa_settings_table()
 void custom_name_changed_event(GtkEntry *entry, gpointer typed_data)
 {
     // TODO: validations on state names entries should be here.
-    const gchar *text = gtk_entry_get_text(entry);
+    const gchar *input_text = gtk_entry_get_text(entry);
 
-    if (g_utf8_strlen(text, -1) > 20) {
+    if (g_utf8_strlen(input_text, -1) > 20) {
         GtkWidget *dialog = gtk_message_dialog_new(GTK_WINDOW(typed_data),
                                     GTK_DIALOG_MODAL | GTK_DIALOG_DESTROY_WITH_PARENT,
                                     GTK_MESSAGE_ERROR,
