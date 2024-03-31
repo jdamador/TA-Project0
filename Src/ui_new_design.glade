@@ -262,6 +262,8 @@
             <property name="can-focus">True</property>
             <property name="events">GDK_EXPOSURE_MASK | GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_ENTER_NOTIFY_MASK</property>
             <property name="adjustment">adjustment1</property>
+            <property name="value">1</property>
+            <signal name="changed" handler="sp_n_states_changed_cb" swapped="no"/>
           </object>
           <packing>
             <property name="x">192</property>
@@ -273,7 +275,11 @@
             <property name="name">sp_m_alphabet</property>
             <property name="visible">True</property>
             <property name="can-focus">True</property>
+            <property name="input-purpose">number</property>
             <property name="adjustment">adjustment2</property>
+            <property name="numeric">True</property>
+            <property name="value">1</property>
+            <signal name="changed" handler="sp_m_alphabet_changed_cb" swapped="no"/>
           </object>
           <packing>
             <property name="x">564</property>
