@@ -59,6 +59,7 @@ void transition_changed_event(GtkEntry *entry, gpointer typed_data);
 void clear_memory();
 void execute_strip_evaluation(const char *strip2eval, char *alphabet_symbols, int **transition_table, int *acceptance_states, char **state_names);
 void fix_ui_transition_table(int ***fixed_table, int **original_table, int n_states, int m_alphabet);
+void transition_focus_out(GtkEntry *entry, gpointer typed_data);
 gboolean isNumeric(const gchar *text);
 
 /*
@@ -312,7 +313,7 @@ void generate_dfa_settings_table()
         // Add new entry to type a custom state name.
         GtkWidget *custom_name = gtk_entry_new();
         gtk_entry_set_placeholder_text(GTK_ENTRY(custom_name), "custom name");
-        g_signal_connect(custom_name, "changed", G_CALLBACK(custom_name_changed_event), NULL);
+        g_signal_connect(custom_name, "changed", G_CALLBACK(custom_name_changed_event), GINT_TO_POINTER(10));
         gtk_grid_attach(GTK_GRID(grid_layout), custom_name, 2, i, 1, 1);
         state_names_entries[i - 1] = custom_name;
 
@@ -338,7 +339,8 @@ void generate_dfa_settings_table()
                 gtk_widget_override_background_color(new_transition, GTK_STATE_NORMAL, &color);
             }
             gtk_entry_set_text(GTK_ENTRY(new_transition), "-");
-            g_signal_connect(new_transition, "changed", G_CALLBACK(transition_changed_event), NULL);
+            // g_signal_connect(new_transition, "changed", G_CALLBACK(transition_changed_event), NULL);
+            g_signal_connect(new_transition, "focus-out-event", G_CALLBACK(transition_focus_out), GINT_TO_POINTER(10));
             gtk_grid_attach(GTK_GRID(grid_layout), new_transition, j + 3, i, 1, 1);
             transition_entries[i - 1][j] = new_transition;
         }
@@ -349,7 +351,6 @@ void generate_dfa_settings_table()
     gtk_container_add(GTK_CONTAINER(scrolled_layout), visual_transition_table);
     gtk_widget_show_all(window);
 }
-
 
 /*
  * execute_strip_evaluation: handle to start the strip evaluation over the input text.
@@ -427,7 +428,7 @@ void execute_strip_evaluation(const char *strip2eval, char *alphabet_symbols, in
                 char_to_print = current_transition->symbol;
                 snprintf(state_str, sizeof(state_str), "%c", char_to_print);
                 gtk_text_buffer_insert_at_cursor(textViewBuffer, state_str, -1);
-                gtk_text_buffer_insert_at_cursor(textViewBuffer, "\" produces a transition from state: ", -1);
+                gtk_text_buffer_insert_at_cursor(textViewBuffer, "\" transition from state: ", -1);
                 // from
                 snprintf(state_str, sizeof(state_str), "%s", state_names[current_transition->from]);
                 gtk_text_buffer_insert_at_cursor(textViewBuffer, state_str, -1);
@@ -544,7 +545,6 @@ void alphabet_symbol_changed_event(GtkEntry *entry, gpointer typed_data)
     }
 }
 
-
 /*
  * custom_name_changed_event: this method is added to every transition entry, so when it change, sent a event.
  *
@@ -556,25 +556,58 @@ void alphabet_symbol_changed_event(GtkEntry *entry, gpointer typed_data)
  */
 void transition_changed_event(GtkEntry *entry, gpointer typed_data)
 {
+
     const gchar *input_text = gtk_entry_get_text(entry);
-    if (!isNumeric(input_text))
+
+    if (strlen(input_text) != 1 && input_text[0] != '-')
     {
-        gtk_entry_set_text(entry, "-");
     }
 
-    if (strlen(input_text) > 4)
-    {
-        gtk_entry_set_text(entry, "-");
-    }
-
-    // glong int_value = g_ascii_strtoll(input_text, NULL, 10);
-    // if(int_value < 0 ){
+    // if (strlen(input_text) > 4)
+    // {
     //     gtk_entry_set_text(entry, "-");
     // }
+
+    // glong int_value = g_ascii_strtoll(input_text, NULL, 10);
+    // if(int_value > n_states ){
+    //     gtk_entry_set_text(entry, "-");
+    // }
+
+    // if (strlen(input_text) == 0)
+    // {
+    //     gtk_entry_set_text(entry, "-");
+    // }
+}
+void transition_focus_out(GtkEntry *entry, gpointer typed_data)
+{
+
+    const gchar *input_text = gtk_entry_get_text(entry);
 
     if (strlen(input_text) == 0)
     {
         gtk_entry_set_text(entry, "-");
+    }
+    else
+    {
+        if (strlen(input_text) == 1 && input_text[0] != '-' && !isNumeric(input_text))
+        {
+            gtk_entry_set_text(entry, "-");
+        }
+        else
+        {
+            if (!isNumeric(input_text))
+            {
+                gtk_entry_set_text(entry, "-");
+            }
+            else
+            {
+                glong int_value = g_ascii_strtoll(input_text, NULL, 10);
+                if (int_value > n_states || int_value < 1)
+                {
+                    gtk_entry_set_text(entry, "-");
+                }
+            }
+        }
     }
 }
 
@@ -583,7 +616,7 @@ void transition_changed_event(GtkEntry *entry, gpointer typed_data)
  *
  * Parameters:
  *   text: text to check if is numeric
- * 
+ *
  * Output:
  *   gboolean: True or False.
  */
