@@ -209,7 +209,7 @@
             <property name="width-request">359</property>
             <property name="visible">True</property>
             <property name="can-focus">False</property>
-            <property name="label" translatable="yes">Transitions Historty</property>
+            <property name="label" translatable="yes">Transitions History</property>
             <property name="justify">center</property>
             <property name="wrap">True</property>
             <attributes>
