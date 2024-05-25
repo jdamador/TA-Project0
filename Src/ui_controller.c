@@ -27,10 +27,11 @@ GtkWidget *scrolled_layout;
 GtkWidget *evaluate_button;
 GtkWidget *evaluate_strip_button;
 GtkWidget *evaluate_strip;
-
+GtkWidget *print_button;
 // Automaton variable settings;
 gint n_states;
 gint m_alphabet;
+int ready_to_print = 0;
 
 // gchar alphabet[1024];
 
@@ -61,7 +62,19 @@ void execute_strip_evaluation(const char *strip2eval, char *alphabet_symbols, in
 void fix_ui_transition_table(int ***fixed_table, int **original_table, int n_states, int m_alphabet);
 void transition_focus_out(GtkEntry *entry, gpointer typed_data);
 gboolean isNumeric(const gchar *text);
-
+void btn_print_clicked_cb(GtkButton *b);
+void print_base_packages(FILE *file);
+void print_title_section(FILE *file);
+void print_main_opening_section(FILE *file);
+void print_main_closing_section(FILE *file);
+void print_dfa_definition(FILE *file, char **states, int states_num, char *alphabet, int alphabet_size, int **trans_states, int *acceptance);
+void print_dfa_graph(FILE *file, char **states, int states_num, char *alphabet, int alphabet_size, int **trans_states, int *acceptance);
+void print_accepted_examples(FILE *file, char **states, int states_num, char *alphabet, int alphabet_size, int **trans_states, int *acceptance);
+void print_rejected_examples(FILE *file, char **states, int states_num, char *alphabet, int alphabet_size, int **trans_states, int *acceptance);
+void print_regex_dfa(FILE *file, char **states, int states_num, char *alphabet, int alphabet_size, int **trans_states, int *acceptance);
+void iterate_states(FILE *file, char **states, int states_num);
+void print_table(FILE *file, int **trans_states, int alphabet_size, int states_num, char **states, char *alphabet);
+void iterate_alphabet(FILE *file, char *alphabet, int alphabet_size);
 /*
  * display_ui: handler to start all the screen elements to be displayed.
  *
@@ -94,7 +107,7 @@ int display_ui(int argc, char *argv[])
     visual_transition_table = GTK_WIDGET(gtk_builder_get_object(ui_builder, "dfa_table"));
     scrolled_layout = GTK_WIDGET(gtk_builder_get_object(ui_builder, "scrolled_layout"));
     evaluate_strip = GTK_WIDGET(gtk_builder_get_object(ui_builder, "evaluate_strip"));
-
+    print_button = GTK_WIDGET(gtk_builder_get_object(ui_builder, "btn_print"));
     // Deactivate the buttons as initial state.
     activation_handler(1);
 
@@ -122,18 +135,21 @@ void activation_handler(int option)
         gtk_widget_set_sensitive(evaluate_button, 0);
         gtk_widget_set_sensitive(evaluate_strip_button, 0);
         gtk_widget_set_sensitive(evaluate_strip, 0);
+        gtk_widget_set_sensitive(print_button, 0);
         break;
     case 2:
         // after settings are made: evaluate button is enable, but evaluate_strip keeps disable.
         gtk_widget_set_sensitive(evaluate_button, 1);
         gtk_widget_set_sensitive(evaluate_strip_button, 0);
         gtk_widget_set_sensitive(evaluate_strip, 0);
+        gtk_widget_set_sensitive(print_button, 0);
         break;
     case 3:
         // after evaluate is pressed: DFA is ready so, evaluate button is disable again, and evaluate_strip is enable.
         gtk_widget_set_sensitive(evaluate_button, 0);
         gtk_widget_set_sensitive(evaluate_strip_button, 1);
         gtk_widget_set_sensitive(evaluate_strip, 1);
+        gtk_widget_set_sensitive(print_button, 1);
         break;
     }
 }
@@ -665,4 +681,476 @@ void settings_clicked_event(GtkButton *b)
 
     // call generate_dfa_settings_table to create the table.
     generate_dfa_settings_table();
+    ready_to_print = 1;
+}
+
+void btn_print_clicked_cb(GtkButton *b)
+{
+
+    char **label_array = (char **)malloc(n_states * sizeof(char *));
+    for (int j = 0; j < n_states; j++)
+    {
+        const gchar *text = gtk_entry_get_text(GTK_ENTRY(state_names_entries[j]));
+
+        label_array[j] = NULL;
+        if (strlen(text) > 0)
+        {
+            label_array[j] = g_strdup(text);
+        }
+        else
+        {
+            label_array[j] = g_strdup_printf("%d", j + 1);
+        }
+    }
+
+    char *symbol_array = (char *)malloc(m_alphabet * sizeof(char));
+    for (int j = 0; j < m_alphabet; j++)
+    {
+        const char *text = gtk_entry_get_text(GTK_ENTRY(alphabet_symbol_entries[j]));
+        char cstr[2];
+        cstr[0] = text[0];
+        cstr[1] = '\0';
+        symbol_array[j] = cstr[0];
+    }
+
+    // Create a 2D array of integers to store the values
+    int **trans_states = (int **)malloc(n_states * sizeof(int *));
+    for (int i = 0; i < n_states; i++)
+    {
+        trans_states[i] = (int *)malloc(m_alphabet * sizeof(int));
+    }
+
+    // Loop through the GtkWidget ***entries and extract integer values
+    for (int i = 0; i < n_states; i++)
+    {
+        for (int j = 0; j < m_alphabet; j++)
+        {
+
+            GtkWidget *entry = transition_entries[i][j];
+            const gchar *text = gtk_entry_get_text(GTK_ENTRY(entry));
+            int value = -1;
+
+            if (strcmp(text, "-") == 0)
+            {
+                value = -1;
+            }
+            else
+            {
+                value = atoi(text);
+            }
+
+            // Store the value in the trans_states
+            trans_states[i][j] = value;
+        }
+    }
+
+    int *acceptance = (int *)malloc(n_states * sizeof(int));
+    for (int i = 0; i < n_states; i++)
+    {
+        GtkWidget *checkbox = acceptance_checkboxes[i];
+        gboolean is_active =
+            gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(checkbox));
+        acceptance[i] = is_active ? 1 : 0;
+    }
+
+    FILE *fp = NULL;
+    fp = fopen("DFA2PDF.tex", "w");
+    print_base_packages(fp);
+    print_title_section(fp);
+    print_main_opening_section(fp);
+      if(ready_to_print){
+        print_dfa_definition(fp, label_array, n_states, symbol_array, m_alphabet, trans_states, acceptance);
+        print_dfa_graph(fp, label_array, n_states, symbol_array, m_alphabet, trans_states, acceptance);
+        print_accepted_examples(fp, label_array, n_states, symbol_array, m_alphabet, trans_states, acceptance);
+        print_rejected_examples(fp, label_array, n_states, symbol_array, m_alphabet, trans_states, acceptance);
+        print_regex_dfa(fp, label_array, n_states, symbol_array, m_alphabet, trans_states, acceptance);
+      } else {
+        fprintf(fp, "Favor ingresar la configuración correcta del DFA, para poder "
+                    "construir el PDF con información relevante.");
+      }
+    print_main_closing_section(fp);
+    fclose(fp);
+    system("pdflatex DFA2PDF.tex");
+    system("evince -s DFA2PDF.pdf");
+}
+
+void print_base_packages(FILE *file)
+{
+    fprintf(file, "\\documentclass{article}\n");
+    fprintf(file, "\\usepackage[english]{babel}\n");
+    fprintf(file, "\\usepackage[a4paper,top=2cm,bottom=2cm,left=2cm,right=2cm,marginparwidth=1.75cm]{geometry}\n");
+    fprintf(file, "\\usepackage{tikz}\n");
+    fprintf(file, "\\usetikzlibrary{automata, positioning, arrows}\n");
+}
+
+void print_title_section(FILE *file)
+{
+    fprintf(file, "\\title{ Tecnológico de Costa Rica \\\\\nEscuela de Ingeniería en Computación\\\\\nTeoría de Automatas y Lenguajes Formales \\\\\nII Sem - 2023 \\\\\nProyecto Programado 1\n}");
+    fprintf(file, "\\author{\nDaniel Amador Salas\\\\\n\\texttt{2017022096}\n\\and\nSebastián Francisco Gamboa Chacóns\\\\\n\\texttt{1}\n\\and\nGerardo Gutierrez Quirós\\\\\n\\texttt{1}\n\\and\nJosef Ruzicka González\\\\\n\\texttt{1}\n}\n");
+    fprintf(file, "\\date{}\n");
+}
+
+void print_main_opening_section(FILE *file)
+{
+    fprintf(file, "\\begin{document}\n");
+    fprintf(file, "\\maketitle\n");
+}
+
+void print_main_closing_section(FILE *file)
+{
+    fprintf(file, "\\end{document}\n");
+}
+
+void print_dfa_definition(FILE *file, char **states, int states_num, char *alphabet, int alphabet_size, int **trans_states, int *acceptance)
+{
+    fprintf(file, "\\section{Definición Formal}\n");
+    fprintf(file, "Un DFA se define como el siguiente quinteto:");
+    fprintf(file, "\\begin{equation}\n");
+    fprintf(file, "M = (Q, \\sum, \\delta, q_0, F)");
+    fprintf(file, "\\\n\\end{equation}\n");
+    fprintf(file, "\\subsection{Q}\n");
+    fprintf(file, "Es el conjunto de estados finitos.\\\\En nuestro ejemplo este conjunto está dado por: \n");
+    fprintf(file, "\\begin{equation}\n \\{");
+    iterate_states(file, states, states_num);
+    fprintf(file, "\\}\n\\end{equation}\n");
+    fprintf(file, "\\subsection{$\\sum$}\n");
+    fprintf(file, "Es el alfabeto.\\\\En nuestro ejemplo este conjunto está dado por: \n");
+    fprintf(file, "\\begin{equation}\n \\{");
+    iterate_alphabet(file, alphabet, alphabet_size);
+    fprintf(file, "\\}\n\\end{equation}\n");
+    fprintf(file, "\\subsection{$\\delta$}\n");
+    fprintf(file, "Es la función de transición. La podemos representar como una tabla donde las filas son los estados y las columnas los símbolos del alfabeto.\\\\\n Formalmente se representa como el siguiente producto cartesiano:");
+    fprintf(file, "\\begin{equation}\n");
+    fprintf(file, "\\delta: Q x \\sum");
+    fprintf(file, "\n\\end{equation}\n");
+    fprintf(file, "En nuestro ejemplo esta tabla corresponde a: \n");
+    print_table(file, trans_states, alphabet_size, states_num, states, alphabet);
+    fprintf(file, "\\subsection{$q_0$}\n");
+    fprintf(file, "Es el estado inicial.\\\\En nuestro ejemplo el estado inicial es: \\\n %s", states[0]);
+    fprintf(file, "\\subsection{F}\n");
+    fprintf(file, "Es el conjunto de estados de aceptación.\\\\En nuestro ejemplo este conjunto está dado por: \n");
+    fprintf(file, "\\begin{equation}\n \\{");
+    for (int i = 0; i < states_num; i++)
+    {
+        if (acceptance[i])
+        {
+            fprintf(file, "%s, ", states[i]);
+        }
+    }
+    fprintf(file, "\\}\n\\end{equation}\n");
+}
+
+void print_dfa_graph(FILE *file, char **states, int states_num, char *alphabet, int alphabet_size, int **trans_states, int *acceptance)
+{
+    fprintf(file, "\\section{Grafo del DFA}\n");
+    fprintf(file, "\\tikzset{ \n ->, >=stealth, node distance=3cm\n}");
+    int i;
+    fprintf(file, "\\begin{tikzpicture}\n");
+    for (i = 0; i < states_num; i++)
+    {
+        if (i == 0)
+        {
+            if (acceptance[i])
+            {
+                fprintf(file, "\\node[state, initial, accepting] (%i) {$%s$};\n", i, states[i]);
+            }
+            else
+            {
+                fprintf(file, "\\node[state, initial] (%i) {$%s$};\n", i, states[i]);
+            }
+        }
+        else
+        {
+            if (acceptance[i])
+            {
+                fprintf(file, "\\node[state, accepting, right of=%i] (%i) {$%s$};\n", i - 1, i, states[i]);
+            }
+            else
+            {
+                fprintf(file, "\\node[state, , right of=%i] (%i) {$%s$};\n", i - 1, i, states[i]);
+            }
+        }
+    }
+
+    int render_draw = 0;
+    for (i = 0; i < states_num; i++)
+    {
+        for (int j = 0; j < alphabet_size; j++)
+        {
+            int value = (trans_states[i][j] == -1) ? -1 : (trans_states[i][j] - 1);
+            if (value != -1)
+            {
+                if (!render_draw)
+                {
+                    fprintf(file, "\\draw ");
+                    render_draw = 1;
+                }
+                if (value == i)
+                {
+                    fprintf(file, "(%i) edge[loop below] node{%c} (%i) \n", i, alphabet[j], value);
+                }
+                else
+                {
+                    int diff = (i < value) ? (value - i) : (i - value);
+                    int alphabet_delta = (j < value) ? (value - j) : (j - value);
+                    float bend_range = diff + (0.75 * alphabet_delta);
+                    int ival = (int)bend_range;
+                    int frac = (bend_range - ival) * 100;
+                    if (i < j)
+                    {
+                        fprintf(file, "(%i) edge[bend left=%i.%icm, above] node {%c} (%i)\n", i, ival, frac, alphabet[j], value);
+                    }
+                    else
+                    {
+                        fprintf(file, "(%i) edge[bend left=%i.%icm, below] node {%c} (%i)\n", i, ival, frac, alphabet[j], value);
+                    }
+                }
+            }
+        }
+    }
+    if (render_draw)
+    {
+        fprintf(file, ";\n");
+    }
+    fprintf(file, "\\end{tikzpicture}\n");
+}
+void print_accepted_examples(FILE *file, char **states, int states_num, char *alphabet, int alphabet_size, int **trans_states, int *acceptance)
+{
+    // HERE TODO: this part is the Joseft one.
+    //   fprintf(file, "\\section{Ejemplos de Hileras Aceptadas}\n");
+    //   int examples_completed = 0;
+    //   int attempts = 0;
+    //   fprintf(file, "\\begin{equation}\n\\{\n");
+
+    //   if(acceptance[0]){
+    //     fprintf(file, "\\epsilon, ");
+    //     examples_completed++;
+    //   }
+
+    //   while(attempts < 30 && examples_completed < 5){
+    //     int str_size = alphabet_size > attempts ? (alphabet_size - attempts + 1) : ( attempts - alphabet_size + 1);
+    //     int n = 0;
+
+    //     while(n < 3){
+    //       char *alt = (char*)calloc(str_size + 2, sizeof(char));
+    //       int k = 0;
+    //       while(k < str_size){
+    //         alt[k] = alphabet[rand() % alphabet_size];
+    //         k++;
+    //       }
+
+    //       int **new_transition_table = NULL;
+
+    //       // To fix the state postion by -1
+    //       correct_ui_transtion_table(&new_transition_table, trans_states,
+    //                              states_num, alphabet_size);
+    //       dfa_result result = dfa_execute(alt, alphabet, new_transition_table, acceptance);
+    //       if(result.accepted && examples_completed < 5){
+    //         if(examples_completed + 1 == 4){
+    //           fprintf(file, "%s ", alt);
+    //         } else {
+    //           fprintf(file, "%s, ", alt);
+    //         }
+    //         examples_completed++;
+    //       }
+    //       n++;
+    //       free(alt);
+    //     }
+    //     attempts++;
+    //   }
+    //   fprintf(file, "\\}\n\\end{equation}\n");
+}
+
+void print_rejected_examples(FILE *file, char **states, int states_num, char *alphabet, int alphabet_size, int **trans_states, int *acceptance)
+{
+    //   fprintf(file, "\\section{Ejemplos de Hileras Rechazadas}\n");
+    //   int examples_completed = 0;
+    //   int attempts = 0;
+    //   fprintf(file, "\\begin{equation}\n\\{\n");
+
+    //   if(!acceptance[0]){
+    //     fprintf(file, "\\epsilon, ");
+    //     examples_completed++;
+    //   }
+
+    //   while(attempts < 30 && examples_completed < 5){
+    //     int str_size = alphabet_size > attempts ? (alphabet_size - attempts + 1) : ( attempts - alphabet_size + 1);
+    //     int n = 0;
+
+    //     while(n < 3){
+    //       char *alt = (char*)calloc(str_size + 2, sizeof(char));
+    //       int k = 0;
+    //       while(k < str_size){
+    //         alt[k] = alphabet[rand() % alphabet_size];
+    //         k++;
+    //       }
+
+    //       int **new_transition_table = NULL;
+
+    //       // To fix the state postion by -1
+    //       correct_ui_transtion_table(&new_transition_table, trans_states,
+    //                              states_num, alphabet_size);
+    //       dfa_result result = dfa_execute(alt, alphabet, new_transition_table, acceptance);
+    //       if(!result.accepted && examples_completed < 5){
+    //         if(examples_completed == 4){
+    //           fprintf(file, "%s ", alt);
+    //         } else {
+    //           fprintf(file, "%s, ", alt);
+    //         }
+    //         examples_completed++;
+    //       }
+    //       n++;
+    //       free(alt);
+    //     }
+    //     attempts++;
+    //   }
+    //   fprintf(file, "\\}\n\\end{equation}\n");
+}
+void print_regex_dfa(FILE *file, char **states, int states_num, char *alphabet, int alphabet_size, int **trans_states, int *acceptance)
+{
+    fprintf(file, "\\section{ Regex - Teorema de Arden}\n");
+
+    for (int k = 0; k < states_num; k++)
+    {
+        int elem_counter = 0;
+        fprintf(file, "\\begin{equation}\n");
+        fprintf(file, "%s = ", states[k]);
+        if (k == 0)
+        {
+            fprintf(file, "\\epsilon ");
+            elem_counter++;
+        }
+
+        for (int i = 0; i < states_num; i++)
+        {
+            for (int j = 0; j < alphabet_size; j++)
+            {
+                if (trans_states[i][j] == k + 1)
+                {
+                    if (elem_counter > 0)
+                    {
+                        fprintf(file, "+ %s%c ", states[i], alphabet[j]);
+                    }
+                    else
+                    {
+                        fprintf(file, "%s%c ", states[i], alphabet[j]);
+                    }
+                    elem_counter++;
+                }
+            }
+        }
+        fprintf(file, "\n\\end{equation}\n");
+    }
+}
+
+void iterate_states(FILE *file, char **states, int states_num)
+{
+    int index = 0;
+    char *state = states[index];
+    while (index < states_num)
+    {
+        if (index + 1 == states_num)
+        {
+            fprintf(file, "%s", state);
+        }
+        else
+        {
+            fprintf(file, "%s, ", state);
+        }
+        index++;
+        state = states[index];
+    }
+}
+
+void iterate_alphabet(FILE *file, char *alphabet, int alphabet_size)
+{
+    int index = 0;
+    char symbol = alphabet[index];
+    while (index < alphabet_size)
+    {
+        if (index + 1 == alphabet_size)
+        {
+            fprintf(file, "%c", symbol);
+        }
+        else
+        {
+            fprintf(file, "%c, ", symbol);
+        }
+        index++;
+        symbol = alphabet[index];
+    }
+}
+
+void print_table(FILE *file, int **trans_states, int alphabet_size, int states_num, char **states, char *alphabet)
+{
+    fprintf(file, "\\begin{center}\n");
+    fprintf(file, "\\begin{tabular}{");
+    int a_index = 0;
+    while (a_index < alphabet_size + 1)
+    {
+        if (a_index == alphabet_size)
+        {
+            fprintf(file, "c");
+        }
+        else
+        {
+            fprintf(file, "c ");
+        }
+        a_index++;
+    }
+    fprintf(file, " }\n");
+
+    for (int j = 0; j < alphabet_size + 1; j++)
+    {
+        if (j == 0)
+        {
+            fprintf(file, " & ");
+        }
+        else
+        {
+            if (j == alphabet_size)
+            {
+                fprintf(file, "%c", alphabet[j - 1]);
+            }
+            else
+            {
+                fprintf(file, "%c & ", alphabet[j - 1]);
+            }
+        }
+    }
+    fprintf(file, "\\\\\n");
+    for (int i = 0; i < states_num; i++)
+    {
+        fprintf(file, "%s & ", states[i]);
+        for (int j = 0; j < alphabet_size; j++)
+        {
+            int value = trans_states[i][j];
+            if (j + 1 == alphabet_size)
+            {
+                if (value == -1)
+                {
+                    fprintf(file, "-");
+                }
+                else
+                {
+                    fprintf(file, "%s", states[value - 1]);
+                }
+            }
+            else
+            {
+                if (value == -1)
+                {
+                    fprintf(file, "- & ");
+                }
+                else
+                {
+                    fprintf(file, "%s & ", states[value - 1]);
+                }
+            }
+        }
+        fprintf(file, "\\\\\n");
+    }
+
+    fprintf(file, "\\end{tabular}");
+    fprintf(file, "\\end{center}");
 }

@@ -1,0 +1,73 @@
+\documentclass{article}
+\usepackage[english]{babel}
+\usepackage[a4paper,top=2cm,bottom=2cm,left=2cm,right=2cm,marginparwidth=1.75cm]{geometry}
+\usepackage{tikz}
+\usetikzlibrary{automata, positioning, arrows}
+\title{ Tecnológico de Costa Rica \\
+Escuela de Ingeniería en Computación\\
+Teoría de Automatas y Lenguajes Formales \\
+II Sem - 2023 \\
+Proyecto Programado 1
+}\author{
+Daniel Amador Salas\\
+\texttt{2017022096}
+\and
+Sebastián Francisco Gamboa Chacóns\\
+\texttt{1}
+\and
+Gerardo Gutierrez Quirós\\
+\texttt{1}
+\and
+Josef Ruzicka González\\
+\texttt{1}
+}
+\date{}
+\begin{document}
+\maketitle
+\section{Definición Formal}
+Un DFA se define como el siguiente quinteto:\begin{equation}
+M = (Q, \sum, \delta, q_0, F)\
+\end{equation}
+\subsection{Q}
+Es el conjunto de estados finitos.\\En nuestro ejemplo este conjunto está dado por: 
+\begin{equation}
+ \{1, 2\}
+\end{equation}
+\subsection{$\sum$}
+Es el alfabeto.\\En nuestro ejemplo este conjunto está dado por: 
+\begin{equation}
+ \{a, b\}
+\end{equation}
+\subsection{$\delta$}
+Es la función de transición. La podemos representar como una tabla donde las filas son los estados y las columnas los símbolos del alfabeto.\\
+ Formalmente se representa como el siguiente producto cartesiano:\begin{equation}
+\delta: Q x \sum
+\end{equation}
+En nuestro ejemplo esta tabla corresponde a: 
+\begin{center}
+\begin{tabular}{c c c }
+ & a & b\\
+1 & - & -\\
+2 & - & -\\
+\end{tabular}\end{center}\subsection{$q_0$}
+Es el estado inicial.\\En nuestro ejemplo el estado inicial es: \
+ 1\subsection{F}
+Es el conjunto de estados de aceptación.\\En nuestro ejemplo este conjunto está dado por: 
+\begin{equation}
+ \{\}
+\end{equation}
+\section{Grafo del DFA}
+\tikzset{ 
+ ->, >=stealth, node distance=3cm
+}\begin{tikzpicture}
+\node[state, initial] (0) {$1$};
+\node[state, , right of=0] (1) {$2$};
+\end{tikzpicture}
+\section{ Regex - Teorema de Arden}
+\begin{equation}
+1 = \epsilon 
+\end{equation}
+\begin{equation}
+2 = 
+\end{equation}
+\end{document}
