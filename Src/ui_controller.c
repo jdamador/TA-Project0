@@ -916,13 +916,45 @@ void print_dfa_graph(FILE *file, char **states, int states_num, char *alphabet, 
 }
 void print_accepted_examples(FILE *file, char **states, int states_num, char *alphabet, int alphabet_size, int **trans_states, int *acceptance)
 {
+    
+    fprintf(file, "\\section{Ejemplos de Hileras Aceptadas}\n");
+    fprintf(file, "\\begin{equation}\n\\{\n");
+    int attempts = 0;
+    int max_str_len = 7;
+    int strs_count = 0;
+    while(attempts < 30 && strs_count < 5){
+    	int str_len = rand() % max_str_len;
+	char* str = (char*)calloc(str_len, sizeof(char)
+	// create string
+	for (int c = 0; c < max_str_len; x++){
+	    str[c] = alphabet[(rand() % alphabet_size)];
+	}
+	// reset transition table	
+        int** transition_table = NULL;
+        transtion_table(&transition_table, trans_states, states_num, alphabet_size);
+	// review string
+	dfa_execution_history solved_dfa = solve_dfa(str, alphabet, transition_table, acceptance);
+
+	// print and add count
+	if(solved_dfa.is_accepted){
+       	    strs_count++;
+	    if (strs_count < 6){
+              fprintf(file, "%s", str);
+              if(strs_count < 5){
+                  fprintf(file, ", ", str);
+              }
+	   }
+	}
+	free(str)
+	attempts++;
+    }
     // HERE TODO: this part is the Joseft one.
     //   fprintf(file, "\\section{Ejemplos de Hileras Aceptadas}\n");
     //   int examples_completed = 0;
     //   int attempts = 0;
     //   fprintf(file, "\\begin{equation}\n\\{\n");
 
-    //   if(acceptance[0]){
+    //   if(acceptance[0])           // JRG No entendí
     //     fprintf(file, "\\epsilon, ");
     //     examples_completed++;
     //   }
@@ -958,7 +990,7 @@ void print_accepted_examples(FILE *file, char **states, int states_num, char *al
     //     }
     //     attempts++;
     //   }
-    //   fprintf(file, "\\}\n\\end{equation}\n");
+    //   fprintf(file, "\\}\n\\end{equation}\n"); // JRG, esto siempre va?
 }
 
 void print_rejected_examples(FILE *file, char **states, int states_num, char *alphabet, int alphabet_size, int **trans_states, int *acceptance)
