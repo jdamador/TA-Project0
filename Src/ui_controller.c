@@ -758,16 +758,20 @@ void btn_print_clicked_cb(GtkButton *b)
     print_base_packages(fp);
     print_title_section(fp);
     print_main_opening_section(fp);
-      if(ready_to_print){
+    if (ready_to_print)
+    {
         print_dfa_definition(fp, label_array, n_states, symbol_array, m_alphabet, trans_states, acceptance);
         print_dfa_graph(fp, label_array, n_states, symbol_array, m_alphabet, trans_states, acceptance);
         print_accepted_examples(fp, label_array, n_states, symbol_array, m_alphabet, trans_states, acceptance);
         print_rejected_examples(fp, label_array, n_states, symbol_array, m_alphabet, trans_states, acceptance);
         print_regex_dfa(fp, label_array, n_states, symbol_array, m_alphabet, trans_states, acceptance);
-      } else {
+    }
+    else
+    {
         fprintf(fp, "Favor ingresar la configuración correcta del DFA, para poder "
                     "construir el PDF con información relevante.");
-      }
+    }
+
     print_main_closing_section(fp);
     fclose(fp);
     system("pdflatex DFA2PDF.tex");
@@ -786,7 +790,7 @@ void print_base_packages(FILE *file)
 void print_title_section(FILE *file)
 {
     fprintf(file, "\\title{ Tecnológico de Costa Rica \\\\\nEscuela de Ingeniería en Computación\\\\\nTeoría de Automatas y Lenguajes Formales \\\\\nII Sem - 2023 \\\\\nProyecto Programado 1\n}");
-    fprintf(file, "\\author{\nDaniel Amador Salas\\\\\n\\texttt{2017022096}\n\\and\nSebastián Francisco Gamboa Chacóns\\\\\n\\texttt{1}\n\\and\nGerardo Gutierrez Quirós\\\\\n\\texttt{1}\n\\and\nJosef Ruzicka González\\\\\n\\texttt{1}\n}\n");
+    fprintf(file, "\\author{\nDaniel Amador Salas\\\\\n\\texttt{2017022096}\n\\and\nSebastián Francisco Gamboa Chacóns\\\\\n\\texttt{2017142512}\n\\and\nGerardo Gutierrez Quirós\\\\\n\\texttt{2016140286}\n\\and\nJosef Ruzicka González\\\\\n\\texttt{2024800833}\n}\n");
     fprintf(file, "\\date{}\n");
 }
 
@@ -916,158 +920,191 @@ void print_dfa_graph(FILE *file, char **states, int states_num, char *alphabet, 
 }
 void print_accepted_examples(FILE *file, char **states, int states_num, char *alphabet, int alphabet_size, int **trans_states, int *acceptance)
 {
-    
-    fprintf(file, "\\section{Ejemplos de Hileras Aceptadas}\n");
-    fprintf(file, "\\begin{equation}\n\\{\n");
-    int attempts = 0;
-    int max_str_len = 7;
-    int strs_count = 0;
-    while(attempts < 30 && strs_count < 5){
-    	int str_len = rand() % max_str_len;
-	char* str = (char*)calloc(str_len, sizeof(char)
-	// create string
-	for (int c = 0; c < max_str_len; x++){
-	    str[c] = alphabet[(rand() % alphabet_size)];
-	}
-	// reset transition table	
-        int** transition_table = NULL;
-        transtion_table(&transition_table, trans_states, states_num, alphabet_size);
-	// review string
-	dfa_execution_history solved_dfa = solve_dfa(str, alphabet, transition_table, acceptance);
 
-	// print and add count
-	if(solved_dfa.is_accepted){
-       	    strs_count++;
-	    if (strs_count < 6){
-              fprintf(file, "%s", str);
-              if(strs_count < 5){
-                  fprintf(file, ", ", str);
-              }
-	   }
-	}
-	free(str)
-	attempts++;
-    }
-    // HERE TODO: this part is the Joseft one.
-    //   fprintf(file, "\\section{Ejemplos de Hileras Aceptadas}\n");
-    //   int examples_completed = 0;
-    //   int attempts = 0;
-    //   fprintf(file, "\\begin{equation}\n\\{\n");
-
-    //   if(acceptance[0])           // JRG No entendí
-    //     fprintf(file, "\\epsilon, ");
-    //     examples_completed++;
-    //   }
-
-    //   while(attempts < 30 && examples_completed < 5){
-    //     int str_size = alphabet_size > attempts ? (alphabet_size - attempts + 1) : ( attempts - alphabet_size + 1);
-    //     int n = 0;
-
-    //     while(n < 3){
-    //       char *alt = (char*)calloc(str_size + 2, sizeof(char));
-    //       int k = 0;
-    //       while(k < str_size){
-    //         alt[k] = alphabet[rand() % alphabet_size];
-    //         k++;
-    //       }
-
-    //       int **new_transition_table = NULL;
-
-    //       // To fix the state postion by -1
-    //       correct_ui_transtion_table(&new_transition_table, trans_states,
-    //                              states_num, alphabet_size);
-    //       dfa_result result = dfa_execute(alt, alphabet, new_transition_table, acceptance);
-    //       if(result.accepted && examples_completed < 5){
-    //         if(examples_completed + 1 == 4){
-    //           fprintf(file, "%s ", alt);
-    //         } else {
-    //           fprintf(file, "%s, ", alt);
-    //         }
-    //         examples_completed++;
-    //       }
-    //       n++;
-    //       free(alt);
+    //     fprintf(file, "\\section{Ejemplos de Hileras Aceptadas}\n");
+    //     fprintf(file, "\\begin{equation}\n\\{\n");
+    //     int attempts = 0;
+    //     int max_str_len = 7;
+    //     int strs_count = 0; // Should be at least five
+    //     if (acceptance[0])
+    //     {
+    //         fprintf(file, "\\epsilon, ");
+    //         strs_count++;
     //     }
-    //     attempts++;
-    //   }
-    //   fprintf(file, "\\}\n\\end{equation}\n"); // JRG, esto siempre va?
+
+    //     int list[5];
+
+    //     while (strs_count < 5)
+    //     {
+    //         int str_len = rand() % max_str_len;
+    //         char *str = (char *)calloc(str_len, sizeof(char));
+    //         // create string
+    //         for (int c = 0; c < max_str_len; c++)
+    //         {
+    //             str[c] = alphabet[(rand() % alphabet_size)];
+    //         }
+    //         // reset transition table
+    //         int **fixed_table = NULL;
+    //         fix_ui_transition_table(&fixed_table, trans_states, states_num, alphabet_size);
+    //         // review string
+    //         dfa_execution_history solved_dfa = solve_dfa(str, alphabet, fixed_table, acceptance);
+
+    //         int isIn  = 0;
+    //         for (int index = 0; index < size; index++) {
+    //         if (strcmp(str, list[index]) == 0) {
+    //             isIn =  1; // Return 1 if found
+    //         }
+    //     }
+    //         // // print and add count
+    //         if(solved_dfa.is_accepted && strs_count < 6 &&isIn ){
+    //            	    strs_count++;
+    //             if (strs_count < 6){
+    //                   fprintf(file, "%s,", str);
+    //                   if(strs_count < 5){
+    //                       fprintf(file, "%s, ", str);
+    //                   }
+    //            }
+    //            scanf("%d", &list[i]);
+    //         }
+    //         free(str);
+    //         //attempts++;
+    //     }
+
+    //     // HERE TODO: this part is the Joseft one.
+    //     //   fprintf(file, "\\section{Ejemplos de Hileras Aceptadas}\n");
+    //     //   int examples_completed = 0;
+    //     //   int attempts = 0;
+    //     //   fprintf(file, "\\begin{equation}\n\\{\n");
+
+    //     //   if(acceptance[0])           // JRG No entendí
+    //     //     fprintf(file, "\\epsilon, ");
+    //     //     examples_completed++;
+    //     //   }
+
+    //     //   while(attempts < 30 && examples_completed < 5){
+    //     //     int str_size = alphabet_size > attempts ? (alphabet_size - attempts + 1) : ( attempts - alphabet_size + 1);
+    //     //     int n = 0;
+
+    //     //     while(n < 3){
+    //     //       char *alt = (char*)calloc(str_size + 2, sizeof(char));
+    //     //       int k = 0;
+    //     //       while(k < str_size){
+    //     //         alt[k] = alphabet[rand() % alphabet_size];
+    //     //         k++;
+    //     //       }
+
+    //     //       int **new_transition_table = NULL;
+
+    //     //       // To fix the state postion by -1
+    //     //       correct_ui_transtion_table(&new_transition_table, trans_states,
+    //     //                              states_num, alphabet_size);
+    //     //       dfa_result result = dfa_execute(alt, alphabet, new_transition_table, acceptance);
+    //     //       if(result.accepted && examples_completed < 5){
+    //     //         if(examples_completed + 1 == 4){
+    //     //           fprintf(file, "%s ", alt);
+    //     //         } else {
+    //     //           fprintf(file, "%s, ", alt);
+    //     //         }
+    //     //         examples_completed++;
+    //     //       }
+    //     //       n++;
+    //     //       free(alt);
+    //     //     }
+    //     //     attempts++;
+    //     //   }
+    //     fprintf(file, "\\}\n\\end{equation}\n");
 }
 
 void print_rejected_examples(FILE *file, char **states, int states_num, char *alphabet, int alphabet_size, int **trans_states, int *acceptance)
 {
-    //   fprintf(file, "\\section{Ejemplos de Hileras Rechazadas}\n");
-    //   int examples_completed = 0;
-    //   int attempts = 0;
-    //   fprintf(file, "\\begin{equation}\n\\{\n");
+    //     //   fprintf(file, "\\section{Ejemplos de Hileras Rechazadas}\n");
+    //     //   int examples_completed = 0;
+    //     //   int attempts = 0;
+    //     //   fprintf(file, "\\begin{equation}\n\\{\n");
 
-    //   if(!acceptance[0]){
-    //     fprintf(file, "\\epsilon, ");
-    //     examples_completed++;
-    //   }
+    //     //   if(!acceptance[0]){
+    //     //     fprintf(file, "\\epsilon, ");
+    //     //     examples_completed++;
+    //     //   }
 
-    //   while(attempts < 30 && examples_completed < 5){
-    //     int str_size = alphabet_size > attempts ? (alphabet_size - attempts + 1) : ( attempts - alphabet_size + 1);
-    //     int n = 0;
+    //     //   while(attempts < 30 && examples_completed < 5){
+    //     //     int str_size = alphabet_size > attempts ? (alphabet_size - attempts + 1) : ( attempts - alphabet_size + 1);
+    //     //     int n = 0;
 
-    //     while(n < 3){
-    //       char *alt = (char*)calloc(str_size + 2, sizeof(char));
-    //       int k = 0;
-    //       while(k < str_size){
-    //         alt[k] = alphabet[rand() % alphabet_size];
-    //         k++;
-    //       }
+    //     //     while(n < 3){
+    //     //       char *alt = (char*)calloc(str_size + 2, sizeof(char));
+    //     //       int k = 0;
+    //     //       while(k < str_size){
+    //     //         alt[k] = alphabet[rand() % alphabet_size];
+    //     //         k++;
+    //     //       }
 
-    //       int **new_transition_table = NULL;
+    //     //       int **new_transition_table = NULL;
 
-    //       // To fix the state postion by -1
-    //       correct_ui_transtion_table(&new_transition_table, trans_states,
-    //                              states_num, alphabet_size);
-    //       dfa_result result = dfa_execute(alt, alphabet, new_transition_table, acceptance);
-    //       if(!result.accepted && examples_completed < 5){
-    //         if(examples_completed == 4){
-    //           fprintf(file, "%s ", alt);
-    //         } else {
-    //           fprintf(file, "%s, ", alt);
-    //         }
-    //         examples_completed++;
-    //       }
-    //       n++;
-    //       free(alt);
-    //     }
-    //     attempts++;
-    //   }
-    //   fprintf(file, "\\}\n\\end{equation}\n");
+    //     //       // To fix the state postion by -1
+    //     //       correct_ui_transtion_table(&new_transition_table, trans_states,
+    //     //                              states_num, alphabet_size);
+    //     //       dfa_result result = dfa_execute(alt, alphabet, new_transition_table, acceptance);
+    //     //       if(!result.accepted && examples_completed < 5){
+    //     //         if(examples_completed == 4){
+    //     //           fprintf(file, "%s ", alt);
+    //     //         } else {
+    //     //           fprintf(file, "%s, ", alt);
+    //     //         }
+    //     //         examples_completed++;
+    //     //       }
+    //     //       n++;
+    //     //       free(alt);
+    //     //     }
+    //     //     attempts++;
+    //     //   }
+    //     //   fprintf(file, "\\}\n\\end{equation}\n");
 }
 void print_regex_dfa(FILE *file, char **states, int states_num, char *alphabet, int alphabet_size, int **trans_states, int *acceptance)
 {
-    fprintf(file, "\\section{ Regex - Teorema de Arden}\n");
+    // TODO: TEOREMA DE ARDEN
 
-    for (int k = 0; k < states_num; k++)
+    // State Equations
+    fprintf(file, "\\section{ Regex - Teorema de Arden}\n");
+    fprintf(file, "\\subsection{ Ecuaciones de Estado}\n");
+    int current_char = 0;
+    char ***state_equations = (char ***)malloc(100 * sizeof(char **)); // TODO: calloc de un x tamano (states*tamano_max_de cada equacion)
+    for (int i = 0; i < n_states; i++)
     {
-        int elem_counter = 0;
+        state_equations[i] = (char **)malloc(100 * sizeof(char *));
+    }
+
+    // e + Bb + Ca
+    // B = Aa
+
+    // Traverse states
+    for (int e = 0; e < states_num; e++)
+    {   
         fprintf(file, "\\begin{equation}\n");
-        fprintf(file, "%s = ", states[k]);
-        if (k == 0)
+        fprintf(file, "%s = ", states[e]);
+        current_char = 0;
+        
+        if (e == 0)
         {
             fprintf(file, "\\epsilon ");
-            elem_counter++;
+            state_equations[e][current_char] = g_strdup("e");
+            current_char += 1;
         }
+        
+        // traverse columns and rows
+        for (int i = 0; i < states_num; i++){
+            for (int j = 0; j < alphabet_size; j++){
 
-        for (int i = 0; i < states_num; i++)
-        {
-            for (int j = 0; j < alphabet_size; j++)
-            {
-                if (trans_states[i][j] == k + 1)
-                {
-                    if (elem_counter > 0)
-                    {
-                        fprintf(file, "+ %s%c ", states[i], alphabet[j]);
+                if (trans_states[i][j] == (e + 1)){  // E is running through all states, so e is [0-n_states[, where states names are [1-n_states]
+                    if (current_char > 0){
+                        fprintf(file, "+ ");
                     }
-                    else
-                    {
-                        fprintf(file, "%s%c ", states[i], alphabet[j]);
-                    }
-                    elem_counter++;
+                    fprintf(file, "%d", (i + 1));
+                    state_equations[e][current_char] = states[i];
+                    current_char++;
+                    fprintf(file, "%c", alphabet[j]);
+                    state_equations[e][current_char] = (char*) alphabet[j];
+                    current_char++;
                 }
             }
         }

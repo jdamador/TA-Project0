@@ -13,13 +13,13 @@ Daniel Amador Salas\\
 \texttt{2017022096}
 \and
 Sebastián Francisco Gamboa Chacóns\\
-\texttt{1}
+\texttt{2017142512}
 \and
 Gerardo Gutierrez Quirós\\
-\texttt{1}
+\texttt{2016140286}
 \and
 Josef Ruzicka González\\
-\texttt{1}
+\texttt{2024800833}
 }
 \date{}
 \begin{document}
@@ -31,12 +31,12 @@ M = (Q, \sum, \delta, q_0, F)\
 \subsection{Q}
 Es el conjunto de estados finitos.\\En nuestro ejemplo este conjunto está dado por: 
 \begin{equation}
- \{1, 2\}
+ \{1, 2, 3\}
 \end{equation}
 \subsection{$\sum$}
 Es el alfabeto.\\En nuestro ejemplo este conjunto está dado por: 
 \begin{equation}
- \{a, b\}
+ \{a, b, c\}
 \end{equation}
 \subsection{$\delta$}
 Es la función de transición. La podemos representar como una tabla donde las filas son los estados y las columnas los símbolos del alfabeto.\\
@@ -45,10 +45,11 @@ Es la función de transición. La podemos representar como una tabla donde las f
 \end{equation}
 En nuestro ejemplo esta tabla corresponde a: 
 \begin{center}
-\begin{tabular}{c c c }
- & a & b\\
-1 & - & -\\
-2 & - & -\\
+\begin{tabular}{c c c c }
+ & a & b & c\\
+1 & 1 & 2 & 2\\
+2 & - & 2 & 3\\
+3 & - & - & 3\\
 \end{tabular}\end{center}\subsection{$q_0$}
 Es el estado inicial.\\En nuestro ejemplo el estado inicial es: \
  1\subsection{F}
@@ -62,12 +63,24 @@ Es el conjunto de estados de aceptación.\\En nuestro ejemplo este conjunto est�
 }\begin{tikzpicture}
 \node[state, initial] (0) {$1$};
 \node[state, , right of=0] (1) {$2$};
+\node[state, , right of=1] (2) {$3$};
+\draw (0) edge[loop below] node{a} (0) 
+(0) edge[bend left=1.0cm, above] node {b} (1)
+(0) edge[bend left=1.75cm, above] node {c} (1)
+(1) edge[loop below] node{b} (1) 
+(1) edge[bend left=1.0cm, above] node {c} (2)
+(2) edge[loop below] node{c} (2) 
+;
 \end{tikzpicture}
 \section{ Regex - Teorema de Arden}
+\subsection{ Ecuaciones de Estado}
 \begin{equation}
-1 = \epsilon 
+1 = \epsilon + 1a
 \end{equation}
 \begin{equation}
-2 = 
+2 = 1b+ 1c+ 2b
+\end{equation}
+\begin{equation}
+3 = 2c+ 3c
 \end{equation}
 \end{document}
