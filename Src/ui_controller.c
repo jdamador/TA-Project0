@@ -778,6 +778,7 @@ void btn_print_clicked_cb(GtkButton *b)
     system("evince -s DFA2PDF.pdf");
 }
 
+//
 void print_base_packages(FILE *file)
 {
     fprintf(file, "\\documentclass{article}\n");
@@ -787,6 +788,7 @@ void print_base_packages(FILE *file)
     fprintf(file, "\\usetikzlibrary{automata, positioning, arrows}\n");
 }
 
+//
 void print_title_section(FILE *file)
 {
     fprintf(file, "\\title{ Tecnológico de Costa Rica \\\\\nEscuela de Ingeniería en Computación\\\\\nTeoría de Automatas y Lenguajes Formales \\\\\nII Sem - 2023 \\\\\nProyecto Programado 1\n}");
@@ -794,17 +796,20 @@ void print_title_section(FILE *file)
     fprintf(file, "\\date{}\n");
 }
 
+//
 void print_main_opening_section(FILE *file)
 {
     fprintf(file, "\\begin{document}\n");
     fprintf(file, "\\maketitle\n");
 }
 
+//
 void print_main_closing_section(FILE *file)
 {
     fprintf(file, "\\end{document}\n");
 }
 
+//
 void print_dfa_definition(FILE *file, char **states, int states_num, char *alphabet, int alphabet_size, int **trans_states, int *acceptance)
 {
     fprintf(file, "\\section{Definición Formal}\n");
@@ -844,6 +849,7 @@ void print_dfa_definition(FILE *file, char **states, int states_num, char *alpha
     fprintf(file, "\\}\n\\end{equation}\n");
 }
 
+//
 void print_dfa_graph(FILE *file, char **states, int states_num, char *alphabet, int alphabet_size, int **trans_states, int *acceptance)
 {
     fprintf(file, "\\section{Grafo del DFA}\n");
@@ -954,6 +960,7 @@ int is_string_in_list(char **list, int list_size, char *string)
     return 0; // String not found in the list
 }
 
+//
 void print_accepted_examples(FILE *file, char **states, int states_num, char *alphabet, int alphabet_size, int **trans_states, int *acceptance)
 {
 
@@ -1023,6 +1030,7 @@ void print_accepted_examples(FILE *file, char **states, int states_num, char *al
     fprintf(file, "\\}\n\\end{equation}\n");
 }
 
+//
 void print_rejected_examples(FILE *file, char **states, int states_num, char *alphabet, int alphabet_size, int **trans_states, int *acceptance)
 {
     // Start the new section.
@@ -1076,6 +1084,8 @@ void print_rejected_examples(FILE *file, char **states, int states_num, char *al
 
     fprintf(file, "\\}\n\\end{equation}\n");
 }
+
+//
 void print_regex_dfa(FILE *file, char **states, int states_num, char *alphabet, int alphabet_size, int **trans_states, int *acceptance)
 {
     // TODO: TEOREMA DE ARDEN
@@ -1119,7 +1129,7 @@ void print_regex_dfa(FILE *file, char **states, int states_num, char *alphabet, 
                     {
                         fprintf(file, "+ ");
                     }
-                    fprintf(file, "%d", (i + 1));
+                    fprintf(file, "%s", state_names[i]);
                     state_equations[e][current_char] = states[i];
                     current_char++;
                     fprintf(file, "%c", alphabet[j]);
@@ -1132,6 +1142,7 @@ void print_regex_dfa(FILE *file, char **states, int states_num, char *alphabet, 
     }
 }
 
+//
 void iterate_states(FILE *file, char **states, int states_num)
 {
     int index = 0;
@@ -1151,6 +1162,7 @@ void iterate_states(FILE *file, char **states, int states_num)
     }
 }
 
+//
 void iterate_alphabet(FILE *file, char *alphabet, int alphabet_size)
 {
     int index = 0;
@@ -1170,6 +1182,7 @@ void iterate_alphabet(FILE *file, char *alphabet, int alphabet_size)
     }
 }
 
+//
 void print_table(FILE *file, int **trans_states, int alphabet_size, int states_num, char **states, char *alphabet)
 {
     fprintf(file, "\\begin{center}\n");
