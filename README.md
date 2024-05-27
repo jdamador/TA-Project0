@@ -25,6 +25,9 @@ Ejecutar el programa:
 ```
 $ ./App/run
 ```
+## Sobre el visualizador de PDF evince
+- Evince se abrira automáticamente luego de presionar el botón de imprimir. Se desplegará en modo pantalla completa y para salir se debe presionar `scape`, si se cambia de pestaña mientras se encuentra en pantalla completa puede que Evince deje de funcionar.
+
 
 ## Información importante sobre la ejecución:
 1. El primer paso para utilizar la aplicación consiste en generar la tabla de configuraciones para el DFA deseado representado como una matrix de `tamaño n_states x m_alphabet_symbols`.
@@ -33,5 +36,9 @@ $ ./App/run
 4. El boton de imprimir genera un pdf con la información del DFA, la información generada es la siguiente.
 - La definición formal del DFA mostrando los valores para cada uno de los elementos del quinteto.
 - El diagrama del DFA configurado en la tabla de transiciones.
-- Ejemplos de hileras aceptadas y rechazadas por el DFA. **NOTA**: La generación de estas hileras se realiza de manera aleatoria, por ende, puede demorarse algunos segundos en cargar el PDF resultado, si la interfaz se congela durante el proceso NO CLICKEAR DE MÁS el programa o se producira un error que forzará el cierre del visualidor externo (EVINCE).
+- Ejemplos de hileras aceptadas y rechazadas por el DFA. **NOTA**: La generación de estas hileras se realiza de manera aleatoria, con un margen de 300 generaciones para evitar que el programa se encicle por no encontrar valores correctos, por ende, puede demorarse algunos segundos en cargar el PDF resultado, si la interfaz se congela durante el proceso NO CLICKEAR DE MÁS el programa o se producira un error que forzará el cierre del visualidor externo (EVINCE).
 5. El último punto visualizado es la expresión regular con el teorema de Arden. Este punto se encuentra incompleto, pero se genera la mitad del algoritmo.
+
+## Ejemplos de DFA que pueden utilizarse para probar el programa
+![Ejemplo DFA 1](/Docs/Example1.png)
+![Ejemplo DFA 1](/Docs/Example2.png)

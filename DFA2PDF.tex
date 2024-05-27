@@ -31,12 +31,12 @@ M = (Q, \sum, \delta, q_0, F)\
 \subsection{Q}
 Es el conjunto de estados finitos.\\En nuestro ejemplo este conjunto está dado por: 
 \begin{equation}
- \{q1, q2, q3\}
+ \{1, 2, 3\}
 \end{equation}
 \subsection{$\sum$}
 Es el alfabeto.\\En nuestro ejemplo este conjunto está dado por: 
 \begin{equation}
- \{a, b\}
+ \{a, b, c\}
 \end{equation}
 \subsection{$\delta$}
 Es la función de transición. La podemos representar como una tabla donde las filas son los estados y las columnas los símbolos del alfabeto.\\
@@ -45,52 +45,52 @@ Es la función de transición. La podemos representar como una tabla donde las f
 \end{equation}
 En nuestro ejemplo esta tabla corresponde a: 
 \begin{center}
-\begin{tabular}{c c c }
- & a & b\\
-q1 & q3 & q2\\
-q2 & q1 & q3\\
-q3 & q3 & q2\\
+\begin{tabular}{c c c c }
+ & a & b & c\\
+1 & 3 & 2 & 1\\
+2 & - & 2 & 1\\
+3 & - & - & 1\\
 \end{tabular}\end{center}\subsection{$q_0$}
 Es el estado inicial.\\En nuestro ejemplo el estado inicial es: \
- q1\subsection{F}
+ 1\subsection{F}
 Es el conjunto de estados de aceptación.\\En nuestro ejemplo este conjunto está dado por: 
 \begin{equation}
- \{q1, q2, \}
+ \{3, \}
 \end{equation}
 \section{Grafo del DFA}
 \tikzset{ 
  ->, >=stealth, node distance=3cm
 }\begin{tikzpicture}
-\node[state, initial, accepting] (0) {$q1$};
-\node[state, accepting, right of=0] (1) {$q2$};
-\node[state, , right of=1] (2) {$q3$};
+\node[state, initial] (0) {$1$};
+\node[state, , right of=0] (1) {$2$};
+\node[state, accepting, right of=1] (2) {$3$};
 \draw (0) edge[bend left=3.50cm, below] node {a} (2)
 (0) edge[bend left=1.0cm, above] node {b} (1)
-(1) edge[bend left=1.0cm, below] node {a} (0)
-(1) edge[bend left=1.75cm, below] node {b} (2)
-(2) edge[loop below] node{a} (2) 
-(2) edge[bend left=1.0cm, below] node {b} (1)
+(0) edge[loop below] node{c} (0) 
+(1) edge[loop below] node{b} (1) 
+(1) edge[bend left=2.50cm, above] node {c} (0)
+(2) edge[bend left=3.50cm, below] node {c} (0)
 ;
 \end{tikzpicture}
 \section{Ejemplos de Hileras Aceptadas}
 \begin{equation}
 \{
-\epsilon, ,b,bbbab,bbbaba,ba,\}
+ca,ccca,cccaca,bbbcca,a,\}
 \end{equation}
 \section{Ejemplos de Hileras Rechazadas}
 \begin{equation}
 \{
-\epsilon, baabb,bb,bbaaabb,ababaa,babb,\}
+c,cbbac,cbba,bcaa,bcaaa,\}
 \end{equation}
 \section{ Regex - Teorema de Arden}
 \subsection{ Ecuaciones de Estado}
 \begin{equation}
-q1 = \epsilon + q2a
+1 = \epsilon + 1c+ 2c+ 3c
 \end{equation}
 \begin{equation}
-q2 = q1b+ q3b
+2 = 1b+ 2b
 \end{equation}
 \begin{equation}
-q3 = q1a+ q2b+ q3a
+3 = 1a
 \end{equation}
 \end{document}
