@@ -918,147 +918,163 @@ void print_dfa_graph(FILE *file, char **states, int states_num, char *alphabet, 
     }
     fprintf(file, "\\end{tikzpicture}\n");
 }
+
+// Function to generate a random string of specified length using characters from the given array
+char *generate_random_string(char *characters, int length, int alphabet_size)
+{
+    char *random_string = (char *)malloc((length + 1) * sizeof(char)); // Allocate memory for the string
+    if (random_string == NULL)
+    {
+        fprintf(stderr, "Memory allocation failed!\n");
+        exit(1);
+    }
+
+    // Seed the random number generator
+    srand(time(NULL));
+
+    // Generate random string
+    for (int i = 0; i < length; i++)
+    {
+        random_string[i] = characters[rand() % alphabet_size];
+    }
+    random_string[length] = '\0'; // Null-terminate the string
+    return random_string;
+}
+
+// Function to check if a string is already in the list of generated strings
+int is_string_in_list(char **list, int list_size, char *string)
+{
+    for (int i = 0; i < list_size; i++)
+    {
+        if (strcmp(list[i], string) == 0)
+        {
+            return 1; // String found in the list
+        }
+    }
+    return 0; // String not found in the list
+}
+
 void print_accepted_examples(FILE *file, char **states, int states_num, char *alphabet, int alphabet_size, int **trans_states, int *acceptance)
 {
 
-    //     fprintf(file, "\\section{Ejemplos de Hileras Aceptadas}\n");
-    //     fprintf(file, "\\begin{equation}\n\\{\n");
-    //     int attempts = 0;
-    //     int max_str_len = 7;
-    //     int strs_count = 0; // Should be at least five
-    //     if (acceptance[0])
-    //     {
-    //         fprintf(file, "\\epsilon, ");
-    //         strs_count++;
-    //     }
+    // Start the new section.
+    fprintf(file, "\\section{Ejemplos de Hileras Aceptadas}\n");
+    fprintf(file, "\\begin{equation}\n\\{\n");
+    int max_str_len = 7;
 
-    //     int list[5];
+    // Check if there are aceptance states.
+    int acceptanceExist = 0;
+    for (int i = 0; i < n_states; i++)
+    {
+        if (acceptance[i] == 1)
+        {
+            acceptanceExist = 1;
+            break;
+        }
+    }
 
-    //     while (strs_count < 5)
-    //     {
-    //         int str_len = rand() % max_str_len;
-    //         char *str = (char *)calloc(str_len, sizeof(char));
-    //         // create string
-    //         for (int c = 0; c < max_str_len; c++)
-    //         {
-    //             str[c] = alphabet[(rand() % alphabet_size)];
-    //         }
-    //         // reset transition table
-    //         int **fixed_table = NULL;
-    //         fix_ui_transition_table(&fixed_table, trans_states, states_num, alphabet_size);
-    //         // review string
-    //         dfa_execution_history solved_dfa = solve_dfa(str, alphabet, fixed_table, acceptance);
+    if (acceptanceExist == 1)
+    {
+        // If the first element is a acceptance state we add it to the options.
+        if (acceptance[0])
+        {
+            fprintf(file, "\\epsilon, ");
+        }
 
-    //         int isIn  = 0;
-    //         for (int index = 0; index < size; index++) {
-    //         if (strcmp(str, list[index]) == 0) {
-    //             isIn =  1; // Return 1 if found
-    //         }
-    //     }
-    //         // // print and add count
-    //         if(solved_dfa.is_accepted && strs_count < 6 &&isIn ){
-    //            	    strs_count++;
-    //             if (strs_count < 6){
-    //                   fprintf(file, "%s,", str);
-    //                   if(strs_count < 5){
-    //                       fprintf(file, "%s, ", str);
-    //                   }
-    //            }
-    //            scanf("%d", &list[i]);
-    //         }
-    //         free(str);
-    //         //attempts++;
-    //     }
+        int **fixed_table = NULL;
+        fix_ui_transition_table(&fixed_table, trans_states, states_num, alphabet_size);
 
-    //     // HERE TODO: this part is the Joseft one.
-    //     //   fprintf(file, "\\section{Ejemplos de Hileras Aceptadas}\n");
-    //     //   int examples_completed = 0;
-    //     //   int attempts = 0;
-    //     //   fprintf(file, "\\begin{equation}\n\\{\n");
+        int num_strings = 5; // Number of random strings to generate
+        char *generated_strings[num_strings];
+        // Generate and print random strings
+        int count = 0;
+        while (count < num_strings || count == 300)
+        {
 
-    //     //   if(acceptance[0])           // JRG No entendí
-    //     //     fprintf(file, "\\epsilon, ");
-    //     //     examples_completed++;
-    //     //   }
+            int string_length = rand() % (max_str_len + 1); // Length of each random string
+            char *random_string = generate_random_string(alphabet, string_length, alphabet_size);
 
-    //     //   while(attempts < 30 && examples_completed < 5){
-    //     //     int str_size = alphabet_size > attempts ? (alphabet_size - attempts + 1) : ( attempts - alphabet_size + 1);
-    //     //     int n = 0;
+            dfa_execution_history solved_dfa = solve_dfa(random_string, alphabet, fixed_table, acceptance);
+            if (solved_dfa.is_accepted)
+            {
+                if (count == 0)
+                {
+                    fprintf(file, "%s,", random_string);
+                    generated_strings[count] = random_string;
+                    count++;
+                }
+                else
+                {
+                    if (!is_string_in_list(generated_strings, count, random_string))
+                    {
+                        fprintf(file, "%s,", random_string);
+                        generated_strings[count] = random_string;
+                        count++;
+                    }
+                    else
+                    {
+                        free(random_string); // Free the memory if the string is a duplicate
+                    }
+                }
+            }
+        }
+    }
 
-    //     //     while(n < 3){
-    //     //       char *alt = (char*)calloc(str_size + 2, sizeof(char));
-    //     //       int k = 0;
-    //     //       while(k < str_size){
-    //     //         alt[k] = alphabet[rand() % alphabet_size];
-    //     //         k++;
-    //     //       }
-
-    //     //       int **new_transition_table = NULL;
-
-    //     //       // To fix the state postion by -1
-    //     //       correct_ui_transtion_table(&new_transition_table, trans_states,
-    //     //                              states_num, alphabet_size);
-    //     //       dfa_result result = dfa_execute(alt, alphabet, new_transition_table, acceptance);
-    //     //       if(result.accepted && examples_completed < 5){
-    //     //         if(examples_completed + 1 == 4){
-    //     //           fprintf(file, "%s ", alt);
-    //     //         } else {
-    //     //           fprintf(file, "%s, ", alt);
-    //     //         }
-    //     //         examples_completed++;
-    //     //       }
-    //     //       n++;
-    //     //       free(alt);
-    //     //     }
-    //     //     attempts++;
-    //     //   }
-    //     fprintf(file, "\\}\n\\end{equation}\n");
+    fprintf(file, "\\}\n\\end{equation}\n");
 }
 
 void print_rejected_examples(FILE *file, char **states, int states_num, char *alphabet, int alphabet_size, int **trans_states, int *acceptance)
 {
-    //     //   fprintf(file, "\\section{Ejemplos de Hileras Rechazadas}\n");
-    //     //   int examples_completed = 0;
-    //     //   int attempts = 0;
-    //     //   fprintf(file, "\\begin{equation}\n\\{\n");
+    // Start the new section.
+    fprintf(file, "\\section{Ejemplos de Hileras Rechazadas}\n");
+    fprintf(file, "\\begin{equation}\n\\{\n");
+    int max_str_len = 7;
 
-    //     //   if(!acceptance[0]){
-    //     //     fprintf(file, "\\epsilon, ");
-    //     //     examples_completed++;
-    //     //   }
+    // If the first element is a acceptance state we add it to the options.
+    if (acceptance[0])
+    {
+        fprintf(file, "\\epsilon, ");
+    }
 
-    //     //   while(attempts < 30 && examples_completed < 5){
-    //     //     int str_size = alphabet_size > attempts ? (alphabet_size - attempts + 1) : ( attempts - alphabet_size + 1);
-    //     //     int n = 0;
+    int **fixed_table = NULL;
+    fix_ui_transition_table(&fixed_table, trans_states, states_num, alphabet_size);
 
-    //     //     while(n < 3){
-    //     //       char *alt = (char*)calloc(str_size + 2, sizeof(char));
-    //     //       int k = 0;
-    //     //       while(k < str_size){
-    //     //         alt[k] = alphabet[rand() % alphabet_size];
-    //     //         k++;
-    //     //       }
+    int num_strings = 5; // Number of random strings to generate
+    char *generated_strings[num_strings];
+    // Generate and print random strings
+    int count = 0;
+    while (count < num_strings || count == 300)
+    {
 
-    //     //       int **new_transition_table = NULL;
+        int string_length = rand() % (max_str_len + 1); // Length of each random string
+        char *random_string = generate_random_string(alphabet, string_length, alphabet_size);
 
-    //     //       // To fix the state postion by -1
-    //     //       correct_ui_transtion_table(&new_transition_table, trans_states,
-    //     //                              states_num, alphabet_size);
-    //     //       dfa_result result = dfa_execute(alt, alphabet, new_transition_table, acceptance);
-    //     //       if(!result.accepted && examples_completed < 5){
-    //     //         if(examples_completed == 4){
-    //     //           fprintf(file, "%s ", alt);
-    //     //         } else {
-    //     //           fprintf(file, "%s, ", alt);
-    //     //         }
-    //     //         examples_completed++;
-    //     //       }
-    //     //       n++;
-    //     //       free(alt);
-    //     //     }
-    //     //     attempts++;
-    //     //   }
-    //     //   fprintf(file, "\\}\n\\end{equation}\n");
+        dfa_execution_history solved_dfa = solve_dfa(random_string, alphabet, fixed_table, acceptance);
+        if (!solved_dfa.is_accepted)
+        {
+            if (count == 0)
+            {
+                fprintf(file, "%s,", random_string);
+                generated_strings[count] = random_string;
+                count++;
+            }
+            else
+            {
+                if (!is_string_in_list(generated_strings, count, random_string))
+                {
+                    fprintf(file, "%s,", random_string);
+                    generated_strings[count] = random_string;
+                    count++;
+                }
+                else
+                {
+                    free(random_string); // Free the memory if the string is a duplicate
+                }
+            }
+        }
+    }
+
+    fprintf(file, "\\}\n\\end{equation}\n");
 }
 void print_regex_dfa(FILE *file, char **states, int states_num, char *alphabet, int alphabet_size, int **trans_states, int *acceptance)
 {
@@ -1079,31 +1095,35 @@ void print_regex_dfa(FILE *file, char **states, int states_num, char *alphabet, 
 
     // Traverse states
     for (int e = 0; e < states_num; e++)
-    {   
+    {
         fprintf(file, "\\begin{equation}\n");
         fprintf(file, "%s = ", states[e]);
         current_char = 0;
-        
+
         if (e == 0)
         {
             fprintf(file, "\\epsilon ");
             state_equations[e][current_char] = g_strdup("e");
             current_char += 1;
         }
-        
-        // traverse columns and rows
-        for (int i = 0; i < states_num; i++){
-            for (int j = 0; j < alphabet_size; j++){
 
-                if (trans_states[i][j] == (e + 1)){  // E is running through all states, so e is [0-n_states[, where states names are [1-n_states]
-                    if (current_char > 0){
+        // traverse columns and rows
+        for (int i = 0; i < states_num; i++)
+        {
+            for (int j = 0; j < alphabet_size; j++)
+            {
+
+                if (trans_states[i][j] == (e + 1))
+                { // E is running through all states, so e is [0-n_states[, where states names are [1-n_states]
+                    if (current_char > 0)
+                    {
                         fprintf(file, "+ ");
                     }
                     fprintf(file, "%d", (i + 1));
                     state_equations[e][current_char] = states[i];
                     current_char++;
                     fprintf(file, "%c", alphabet[j]);
-                    state_equations[e][current_char] = (char*) alphabet[j];
+                    state_equations[e][current_char] = (char *)alphabet[j];
                     current_char++;
                 }
             }
