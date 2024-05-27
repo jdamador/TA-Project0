@@ -762,8 +762,8 @@ void btn_print_clicked_cb(GtkButton *b)
     {
         print_dfa_definition(fp, label_array, n_states, symbol_array, m_alphabet, trans_states, acceptance);
         print_dfa_graph(fp, label_array, n_states, symbol_array, m_alphabet, trans_states, acceptance);
-        print_accepted_examples(fp, label_array, n_states, symbol_array, m_alphabet, trans_states, acceptance);
-        print_rejected_examples(fp, label_array, n_states, symbol_array, m_alphabet, trans_states, acceptance);
+        // print_accepted_examples(fp, label_array, n_states, symbol_array, m_alphabet, trans_states, acceptance);
+        // print_rejected_examples(fp, label_array, n_states, symbol_array, m_alphabet, trans_states, acceptance);
         print_regex_dfa(fp, label_array, n_states, symbol_array, m_alphabet, trans_states, acceptance);
     }
     else
@@ -1076,60 +1076,50 @@ void print_rejected_examples(FILE *file, char **states, int states_num, char *al
 
     fprintf(file, "\\}\n\\end{equation}\n");
 }
+
+void printEquations(char equations[m_alphabet][100], int numStates, FILE *file)
+{   
+     fprintf(file, "Equation:");
+    for (int i = 0; i < numStates; i++)
+    {   fprintf(file, "\\begin{equation}\n");
+        fprintf(file, "q%d: %s", i , equations[i]);
+        //printf("Equation for state q%d: %s\n", (i + 1), equations[i]);
+        fprintf(file, "\n\\end{equation}\n");
+    }
+}
+
 void print_regex_dfa(FILE *file, char **states, int states_num, char *alphabet, int alphabet_size, int **trans_states, int *acceptance)
 {
-    // TODO: TEOREMA DE ARDEN
+    // // TODO: TEOREMA DE ARDEN
 
     // State Equations
     fprintf(file, "\\section{ Regex - Teorema de Arden}\n");
     fprintf(file, "\\subsection{ Ecuaciones de Estado}\n");
-    int current_char = 0;
-    char ***state_equations = (char ***)malloc(100 * sizeof(char **)); // TODO: calloc de un x tamano (states*tamano_max_de cada equacion)
+    char equations[m_alphabet][100];
+
+    // Initialize equations
     for (int i = 0; i < n_states; i++)
     {
-        state_equations[i] = (char **)malloc(100 * sizeof(char *));
-    }
-
-    // e + Bb + Ca
-    // B = Aa
-
-    // Traverse states
-    for (int e = 0; e < states_num; e++)
-    {
-        fprintf(file, "\\begin{equation}\n");
-        fprintf(file, "%s = ", states[e]);
-        current_char = 0;
-
-        if (e == 0)
+        sprintf(equations[i], "R%d = ", i + 1);
+        for (int j = 0; j < m_alphabet; j++)
         {
-            fprintf(file, "\\epsilon ");
-            state_equations[e][current_char] = g_strdup("e");
-            current_char += 1;
-        }
-
-        // traverse columns and rows
-        for (int i = 0; i < states_num; i++)
-        {
-            for (int j = 0; j < alphabet_size; j++)
+            if (trans_states[i][j] != -1)
             {
-
-                if (trans_states[i][j] == (e + 1))
-                { // E is running through all states, so e is [0-n_states[, where states names are [1-n_states]
-                    if (current_char > 0)
-                    {
-                        fprintf(file, "+ ");
-                    }
-                    fprintf(file, "%d", (i + 1));
-                    state_equations[e][current_char] = states[i];
-                    current_char++;
-                    fprintf(file, "%c", alphabet[j]);
-                    state_equations[e][current_char] = (char *)alphabet[j];
-                    current_char++;
+                if (j > 0)
+                {
+                    strcat(equations[i], " + ");
                 }
+
+                char transition[10];
+                sprintf(transition, "%c%d", alphabet[j], trans_states[i][j]);
+                strcat(equations[i], transition);
             }
         }
-        fprintf(file, "\n\\end{equation}\n");
     }
+
+    // Print initial equations
+    printf("Initial Equations:\n");
+    printEquations(equations, n_states, file);
 }
 
 void iterate_states(FILE *file, char **states, int states_num)
